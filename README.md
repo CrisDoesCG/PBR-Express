@@ -1,6 +1,8 @@
-# Houdini shelf tool - createRenderNode
-## A Houdini script that merges the selected node into separate node via 'objectmerge' node.
+# Houdini shelf tool - PBR-Express
+## A Houdini shelf tool that automatically creates PBR materials for various renderers from the input textures.  
 
+
+###
 
 ### Installation
 * Work
