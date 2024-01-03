@@ -169,7 +169,7 @@ def metadataCheck(naming_convention, old_data):
 
         check_list.append(metadata)
 
-    print("[SUCCESS] File metadata was matches to corresponding texture types.") 
+    print("[SUCCESS] File metadata matches to corresponding texture types.") 
     return check_list          
 
 
@@ -258,7 +258,7 @@ def goalSelection():
             print("nice")
         else:
             goalPath = currentPane_path
-        print(f"[SUCCESS] A valid destination for the nodes has  selected: {goalPath}") 
+        print(f"[SUCCESS] A valid destination for the nodes has been selected: {goalPath}") 
 
     else:
         goalPath = hou.ui.selectNode(title = "Input destination for material") 
