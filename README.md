@@ -14,13 +14,16 @@
 * Use `CNTRL` / `SHIFT` / `ALT` / `CMD` + `CLICK` on the shelf tool to activate "Quick Setup", bypassing the main menu and saving 2+ clicks per material creation! 
 
 ### Installation
-* 
-*
-* Work
-* in
-* progress
+1) Go to the PBR-Express.py file
+2) Copy the raw text (button on the top right)
+3) Inside Houdini, go to any shelf tap and right click > `New Tool... `
+4) Optional: Name your tool however you like
+5) Optional: Pick a fitting icon
+6) Under the tab `script` just paste the previously copied raw code
+7) On the bottom right click `Apply` & `Accept`
 
 ### Instructions
+
 
 ### Changing behavior
 
