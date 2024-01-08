@@ -6,7 +6,7 @@
 * Quickly create PBR materials with just a few clicks from your input files!
 * Supports any texture files that have the texture type written at the end of the file name and is sepparated by an underscore: `sample_texture_4k_displacement.exr`
 * Easy copy-paste installation
-* Support for different renderers: Right now you can choose between **Karma** and **Mantra**, with plans to expand the script to support materials for **Redshift**, **Arnold**, **Vray** and more.
+* Support for different renderers: Right now you can create between creating a **Karma** or **Mantra** PBR material.
 * Preset oriented workflow: Every texture providing website has its own naming convention. Easaly editable that can be easily expanded to support   
 * Custom naming conventions: Don’t want to mess with the code to add your own preset? Choose`Custom setup` inside the main menu to be prompted with a window where you can input your own naming conventions.     (NOTE: Those setups won't get saved and you will have to input them for each new material)
 * Expandable setups:
@@ -32,7 +32,7 @@
 ## Contributing
 
 ## Future Plans
-
+with plans to expand the script to support materials for **Redshift**, **Arnold**, **Vray** and more.
 ## Changing behavior
 
 
