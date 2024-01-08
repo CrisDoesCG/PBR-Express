@@ -27,8 +27,11 @@
 6) Under the tab `script` just paste the previously copied raw code
 7) On the bottom right click `Apply` & `Accept`
 
-## Instructions
+## Troubleshooting
 
+## Contributing
+
+## Future Plans
 
 ## Changing behavior
 
