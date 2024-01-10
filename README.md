@@ -1,6 +1,7 @@
 # Houdini shelf tool - PBR-Express
 ### _A Houdini shelf tool that automatically creates PBR materials for various renderers from the input textures._ 
 
+## Table of Contents
 
 ## Key-Features
 * Quickly create PBR materials with just a few clicks from your input files!
