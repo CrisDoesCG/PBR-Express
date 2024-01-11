@@ -1,12 +1,19 @@
 import hou
 import os
 
-                # NAME OF THE PRESET #                                                   # THE NAMING CONVENTION #
+
 preset_data = {
-    "Quixel         Albedo, AO, Displacement, Normal, Roughness, ...":      ["Albedo", "AO", "Displacement", "Normal", "Roughness"],
-    "Textures.com   albedo, ao, height, normal, roughness, ...":            ["albedo", "ao", "height", "normal", "roughness"],
-    "Fictional      dif, ao, disp, nor, rough, ...":                        ["dif", "ao", "disp", "nor", "rough"],
+
+    # NAME OF THE PRESET #              # THE NAMING CONVENTION #
+    "quixel.com":           ["Albedo", "AO", "Displacement", "Normal", "Roughness", "", ""],
+    "textures.com":         ["albedo", "ao", "height", "normal", "roughness", "metallic", "alpha"],
+    "polyhaven.com":        ["diff", "ao", "disp", "norm_dx", "rough", "", ""],                                 # nor won't work here since its called nor_dx, metallic won't work since those are arm textures which would need special treatment
+    "cgbookcase.com":       ["BaseColor", "AO", "Height", "Normal", "Roughness", "Metallic", "Opacity"],
+    "freepbr.com":          ["albedo", "ao", "height", "normal-ogl", "roughness", "metallic", ""],
+    "ambientcg.com":        ["Color", "AmbientOcclusion", "Displacement", "NormalDX", "Roughness", "Metalness", "Opacity"],
+    
 }
+
 
 supportedTextures_data = {
     "DIFFUSE": [],      # index = 0
@@ -14,6 +21,8 @@ supportedTextures_data = {
     "DISP": [],         # index = 2
     "NORMAL": [],       # index = 3
     "ROUGH": [],        # index = 4
+    "METALLIC": [],     # index = 5
+    "OPACITY": [],      # index = 6
 }
 
 supported_renderers = [
@@ -34,6 +43,10 @@ for key, values in preset_data.items():
             supportedTextures_data["NORMAL"].append(value)
         elif index == 4:
             supportedTextures_data["ROUGH"].append(value)
+        elif index == 5:
+            supportedTextures_data["METALLIC"].append(value) 
+        elif index == 6:
+            supportedTextures_data["OPACITY"].append(value)             
 
 ## Remove duplicates from each list
 for key, values in supportedTextures_data.items():
@@ -58,17 +71,17 @@ def textureFinder(input):
     if len(input) == 0:
         print("[INFO] Script has been canceled.")
         hou.ui.displayMessage("Script has been canceled.")
-        exit()
-    
-    metadata_list = []        
+        exit()     
         
     input_files_clean = input.split(" ; ")
-    
-    ### Check if files types are supported
-    
-    invalid_fileTypes = []
-    
+        
+    metadata_list = []       
+    invalid_fileTypes = []        
+    file_endings = [] 
+    resolutions = ["1k", "1K", "2k", "2K", "4k", "4K", "8k", "8K", "16k", "16K", "32k", "32K"]
+
     for file in input_files_clean:
+        ### Check if files types are supported
         is_valid = False
         for element in validFileTypes():
             if file.endswith(element):
@@ -77,15 +90,19 @@ def textureFinder(input):
         if not is_valid:
             invalid_fileTypes.append(element)
         
-    ### Check if files have duplicate endings
-    
-    file_endings = []
-    
-    for file in input_files_clean:
+        ### Create metadata    
         fullname = file.split("/")[-1]
         name, extension = os.path.splitext(fullname)
-        ending = name.split("_")[-1]
-        file_endings.append(ending)        
+        if name.split("_")[-1] in resolutions:      # If the last word after the sepparator is a resolution, fall back to the 2nd word
+            ending = ending = name.split("_")[-2]
+        else:
+            ending = name.split("_")[-1]
+        type = None           
+                
+        metadata = (file,name,ending,type)                
+        metadata_list.append(metadata) 
+        
+        file_endings.append(ending)
         
     ### Error checking for invalid file types or ending duplicates        
 
@@ -100,23 +117,7 @@ def textureFinder(input):
         hou.ui.displayMessage("Seems like one of your files is not an image file, check the console for more info.", title=("BZZ... WRONG"))
         exit()           
         
-    print("[SUCCESS] Input files seem valid.")
-    
-    ### Create metadata tuple for each file if no errors have been thrown
-    
-    endings_list = []
-    cancel = 0
-    
-    for file in input_files_clean:
-        fullname = file.split("/")[-1]
-        name, extension = os.path.splitext(fullname)
-        ending = name.split("_")[-1]
-        type = None           
-                
-        metadata = (file,name,ending,type)
-                
-        metadata_list.append(metadata)            
-    
+    print("[SUCCESS] Input files seem valid.")                     
     print("[SUCCESS] Metadata for each file was written.")        
     return metadata_list            
         
@@ -141,12 +142,15 @@ def metadataAssign(old_data):
     ### Check if there are multiple files of the same type   
     for file in quick_list:
         t = file[3]
-        if t in unique_type:
-            print(f"[ERROR] Multiple files of the same type detected: {t}")
-            hou.ui.displayMessage(f"Seems like you have selected multiple files of the same type, check the console for more info", title=("BZZ... WRONG"))        
-            exit()
-        else:
-            unique_type.append(t)            
+        if t == None:       # Checking so we can have multiple files that are of the type "None"
+            pass
+        else:            
+            if t in unique_type:
+                print(f"[ERROR] Multiple files of the same type detected: {t}")
+                hou.ui.displayMessage(f"Seems like you have selected multiple files of the same type, check the console for more info", title=("BZZ... WRONG"))        
+                exit()
+            else:
+                unique_type.append(t)            
 
     return quick_list
 
@@ -369,23 +373,24 @@ def nodeCreation(renderer, goal, file_data):
             
             ### Individual actions for each texture type
             if type == "DIFFUSE":
-                MTLX_DIFFUSE = MTLX_Image_Node
                 MTLX_multiply.setNamedInput("in1", MTLX_Image_Node, "out")
             if type == "AO":
-                MTLX_AO = MTLX_Image_Node
                 MTLX_multiply.setNamedInput("in2", MTLX_Image_Node, "out")
                 MTLX_Image_Node.parm("signature").set("float")
             if type == "DISP":
-                MTLX_DISP = MTLX_Image_Node
                 MTLX_remap_disp.setNamedInput("in", MTLX_Image_Node, "out") 
                 MTLX_Image_Node.parm("signature").set("float")
             if type == "NORMAL":
-                MTLX_NORMAL = MTLX_Image_Node
                 MTLX_normal.setNamedInput("in", MTLX_Image_Node, "out")
             if type == "ROUGH":
-                MTLX_ROUGH = MTLX_Image_Node
                 MTLX_StSf_Node.setNamedInput("specular_roughness", MTLX_Image_Node,"out")
                 MTLX_Image_Node.parm("signature").set("float")
+            if type == "METALLIC":
+                MTLX_Image_Node.parm("signature").set("float")
+                MTLX_StSf_Node.setNamedInput("metalness", MTLX_Image_Node,"out")
+            if type == "OPACITY":
+                # MTLX_Image_Node.parm("signature").set("float")        # For some reason that I dont understand the MTLX node wants a vector as input
+                MTLX_StSf_Node.setNamedInput("opacity", MTLX_Image_Node,"out")                
                 
         ### Check if there are no nodes of this type 
         if "DIFFUSE" not in detected_texture_types and "AO" not in detected_texture_types:
@@ -423,6 +428,13 @@ def nodeCreation(renderer, goal, file_data):
             if type == "ROUGH":
                 MANTRA_principled.parm("rough_useTexture").set(True)
                 MANTRA_principled.parm("rough_texture").set(file)
+            if type == "METALLIC":
+                MANTRA_principled.parm("metallic_useTexture").set(True)
+                MANTRA_principled.parm("metallic_texture").set(file)  
+            if type == "OPACITY":
+                MANTRA_principled.parm("opaccolor_useTexture").set(True)
+                MANTRA_principled.parm("opaccolor_texture").set(file)                
+                
 
         print("[SUCCESS] All Mantra nodes created.")                          
             
