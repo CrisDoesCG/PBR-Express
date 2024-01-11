@@ -2,25 +2,16 @@
 ### _A Houdini shelf tool that creates PBR materials for various renderers from the input textures._
 
 ## 📖 Table of Contents
-1. - [Key-Features](#Key-Features)
-2. - [Requirements](#Requirements)
-3. - [Installation](#Installation)
-4. [How It Works](#How-it-works)
-5. [Contributing](#Contributing)
-   - [Adding Missing Presets](#Adding-missing-presets )
-6. [Future Plans](#Future-Plans)
-7. [Support](#Support)
-   - [Buy Me a Coffee](#buy-me-a-coffee)
-   - [Connect on Social Media](#connect-on-social-media)
-   - [Share Your Experience](#share-your-experience)
+
+## 🎬 Showcase
    
 ## 🔑 Key-Features
 * **Quickly create PBR materials with just a few clicks from your input files!**
 * **Easy copy-paste installation**
-* Supports any texture files that have the texture type written at the end of the file name and is sepparated by an underscore: `sample_texture_4k_displacement.exr`
+* **Texture naming flexibility:** Supports any texture files that have the texture type written at the end of the file name and it is sepparated by an underscore: e.g. `sample_texture_4k_displacement.exr`
 * **Support for different renderers:** Right now you can choose between creating a **Karma** or **Mantra** PBR material.
-* **Preset oriented workflow:** Every texture providing website has its own naming convention. Some call it albedo while others call it diffuse. This tool tries to streamline the process of differentiating between all of those naming conventions and having one central variable (`preset_data`) that is 1. easily expandable and 2. holds every website name (e.g. Quixel) with the corresponding naming convention (e.g. "Albedo", "AO", "Displacement", "Normal", "Roughness") 
-* **Expandable setups:** The script was created with easy expansion in mind.  
+* **Preset oriented workflow:** Every texture providing website has its own naming convention. Some call it albedo while others call it diffuse. This tool tries to streamline the process of differentiating between all of those naming conventions and having one central variable (`preset_data`) that is easily expandable and holds every website name (e.g. Quixel) with the corresponding naming convention (e.g. "Albedo", "AO", "Displacement", "Normal", "Roughness") 
+* **Expandable from the ground up:** The script was created with easy expansion in mind. Not only can presets be added easily, but adding new texture types is also reasonably straightforward and with a bit of Python knowledge even support for new render engines can be added without waiting for this repo to be updated. See [Contributing](#🤝-Contributing)   
 * **Custom naming conventions:** Don’t want to mess with the code to add your own preset? Choose `Custom setup` inside the main menu to be prompted with a window where you can input your own naming conventions. (NOTE: Those setups won't get saved and you will have to input them for each new material)
 * **Smart context detection:** If you already have a valid material network open, the tool won't ask the user for a path to create the material and will just take the active pane, saving a few clicks. 
 * **Quick setup:** Use `CNTRL` or `SHIFT` or `ALT` or `CMD` + `CLICK` on the shelf tool to activate "Quick Setup", bypassing the main menu and saving 2+ clicks per material creation! 
