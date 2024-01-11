@@ -1,4 +1,4 @@
-# Houdini shelf tool - PBR-Express
+# <img src="https://static.sidefx.com/images/apple-touch-icon.png" width="25" height="25" alt="Hbuild Logo"> Houdini shelf tool - PBR-Express
 ### _A Houdini shelf tool that automatically creates PBR materials for various renderers from the input textures._ 
 
 ## Table of Contents
@@ -14,8 +14,6 @@
 * Smart context detection: If you already have a valid material network open, the tool won't ask the user for a path to create the material and will just take the active pane, saving a few clicks. 
 * Use `CNTRL` or `SHIFT` or `ALT` or `CMD` + `CLICK` on the shelf tool to activate "Quick Setup", bypassing the main menu and saving 2+ clicks per material creation! 
 
-## Example Use
-
 ## Requirements
 * Houdini license of **any** kind (Apprentice, Core, Indie, FX,... )
 * Houdini 20.0.547+ (_may_ work with older versions but it's untested)
@@ -30,9 +28,12 @@
 6) Under the tab `script` just paste the previously copied raw code
 7) On the bottom right click `Apply` & `Accept`
 
-## Troubleshooting
+## How does it work?
 
 ## Contributing
+### Adding missing presets 
+* This is something everyone can do with minimal Python/scripting knowledge. Just follow the structure inside `preset_data` and add the name of your.... I dont have access to every single texture providing website and there are endless possibilities of naming variations. The more people contribute with websites and their naming convention, the better the tool will recognize the texture types.
+
 
 ## Future Plans
 with plans to expand the script to support materials for **Redshift**, **Arnold**, **Vray** and more.
