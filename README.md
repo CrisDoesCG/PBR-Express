@@ -2,9 +2,9 @@
 ### _A Houdini shelf tool that creates PBR materials for various renderers from the input textures._
 
 ## 📖 Table of Contents
-1. [Key-Features](#Key-Features)
-2. [Requirements](#Requirements)
-3. [Installation](#Installation)
+1. - [Key-Features](#Key-Features)
+2. - [Requirements](#Requirements)
+3. - [Installation](#Installation)
 4. [How It Works](#How-it-works)
 5. [Contributing](#Contributing)
    - [Adding Missing Presets](#Adding-missing-presets )
