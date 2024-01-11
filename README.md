@@ -34,8 +34,9 @@
 
 ## 🤝 Contributing
 ### Adding missing presets 
-* This is something everyone can do with minimal Python/scripting knowledge. Just follow the structure inside `preset_data` and add the name of your.... I dont have access to every single texture providing website and there are endless possibilities of naming variations. The more people contribute with websites and their naming convention, the better the tool will recognize the texture types.
-
+This is something everyone can do with minimal Python/scripting knowledge. Just follow the structure inside `preset_data` and add the name of your preset. I dont have access to every single texture providing website and there are endless possibilities of naming variations. The more people contribute with websites and their naming convention, the better the tool will recognize the texture types.
+### Adding missing texture types
+### Adding render engine
 
 ## 🔮 Future Plans
 with plans to expand the script to support materials for **Redshift**, **Arnold**, **Vray** and more.
