@@ -3,13 +3,13 @@
 
 ## 📖 Table of Contents
 1. [Key-Features](#Key-Features)
-2. [Requirements](#requirements)
-3. [Installation](#installation)
-4. [How It Works](#how-it-works)
-5. [Contributing](#contributing)
-   - [Adding Missing Presets](#adding-missing-presets)
-6. [Future Plans](#future-plans)
-7. [Support](#support)
+2. [Requirements](#Requirements)
+3. [Installation](#Installation)
+4. [How It Works](#How-it-works)
+5. [Contributing](#Contributing)
+   - [Adding Missing Presets](#Adding-missing-presets )
+6. [Future Plans](#Future-Plans)
+7. [Support](#Support)
    - [Buy Me a Coffee](#buy-me-a-coffee)
    - [Connect on Social Media](#connect-on-social-media)
    - [Share Your Experience](#share-your-experience)
@@ -18,7 +18,6 @@
 * **Quickly create PBR materials with just a few clicks from your input files!**
 * **Easy copy-paste installation**
 * Supports any texture files that have the texture type written at the end of the file name and is sepparated by an underscore: `sample_texture_4k_displacement.exr`
-
 * **Support for different renderers:** Right now you can choose between creating a **Karma** or **Mantra** PBR material.
 * **Preset oriented workflow:** Every texture providing website has its own naming convention. Some call it albedo while others call it diffuse. This tool tries to streamline the process of differentiating between all of those naming conventions and having one central variable (`preset_data`) that is 1. easily expandable and 2. holds every website name (e.g. Quixel) with the corresponding naming convention (e.g. "Albedo", "AO", "Displacement", "Normal", "Roughness") 
 * **Expandable setups:** The script was created with easy expansion in mind.  
@@ -40,7 +39,7 @@
 6) Under the tab `script` just paste the previously copied raw code
 7) On the bottom right click `Apply` & `Accept`
 
-## 🤔 How does it work?
+## 🤔 How it works
 
 ## 🤝 Contributing
 ### Adding missing presets 
