@@ -1,5 +1,5 @@
 # <img src="https://static.sidefx.com/images/apple-touch-icon.png" height="24" width="24" alt="Houdini Logo"> <img src="https://s3.dualstack.us-east-2.amazonaws.com/pythondotorg-assets/media/community/logos/python-logo-only.png" height="25" width="20" alt="Python Logo"> PBR-Express
-### _PBR-Express is a Houdini shelf tool designed to expedite the creation of PBR materials.  Simply input your texture files and the script swiftly generates a material setup for your chosen renderer. Designed to minimize repetitive tasks, PBR-Express empowers VFX artists to dedicate more time to the creative nuances of material design. Experience a seamless workflow that converts textures into a ready-to-use material in Houdini._
+### _PBR-Express is a Houdini shelf tool designed to expedite the creation of PBR materials.  Simply input your texture files and the script will swiftly generate a material setup for your chosen renderer. Designed to minimize repetitive tasks, PBR-Express empowers VFX artists to dedicate more time to the creative nuances of material design. Experience a seamless workflow that converts textures into a ready-to-use material in Houdini._
 
 ## 📖 Table of Contents
 
@@ -18,9 +18,9 @@
       - [Adding render engine](#adding-render-engine)
    - [Future-Plans](#-future-plans)
    - [Support](#-support)
-      - [Buy Me A Coffee](buy-me-a-coffee)
-      - [Connect on Social Media](connect-on-social-media)
-      - [Share Your Experience](share-your-experience)
+      - [Buy Me A Coffee](#buy-me-a-coffee)
+      - [Connect on Social Media](#connect-on-social-media)
+      - [Share Your Experience](#share-your-experience)
 
 ## 🎬 Showcase
    
@@ -49,7 +49,7 @@ Supports any texture sets that have the texture type written at the end of the f
 <details>
 <summary><strong> Support for different renderers </strong></summary>
 <br>
-The script currently able to create materials for Karma (MTLX) and Mantra (Principled).
+The script currently able to create materials for Karma (MTLX Surface Shader) and Mantra (Principled Shader).
 <br><br>
 </details> 
 
