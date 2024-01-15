@@ -7,11 +7,14 @@ preset_data = {
     # NAME OF THE PRESET #              # THE NAMING CONVENTION #
     "quixel.com":           ["Albedo", "AO", "Displacement", "Normal", "Roughness", "", ""],
     "textures.com":         ["albedo", "ao", "height", "normal", "roughness", "metallic", "alpha"],
-    "polyhaven.com":        ["diff", "ao", "disp", "norm_dx", "rough", "", ""],                                 # nor won't work here since its called nor_dx, metallic won't work since those are arm textures which would need special treatment
+    "polyhaven.com":        ["diff", "ao", "disp", "dx", "rough", "", ""],                                                  # metallic won't work since those are "arm" textures which would need special treatment
     "cgbookcase.com":       ["BaseColor", "AO", "Height", "Normal", "Roughness", "Metallic", "Opacity"],
     "freepbr.com":          ["albedo", "ao", "height", "normal-ogl", "roughness", "metallic", ""],
     "ambientcg.com":        ["Color", "AmbientOcclusion", "Displacement", "NormalDX", "Roughness", "Metalness", "Opacity"],
-    
+    "3dtextures.me":        ["basecolor", "ambientOcclusion", "height", "normal", "roughness", "metallic", "opacity"],
+    "pbrmaterials.com":     ["BaseColor", "AmbientOcclusion", "Height", "Normal", "Roughness", "Metallic", "Opacity"],
+    "texturecan.com":       ["color", "ao", "height", "opengl", "roughness", "metallic", "opacity"],
+
 }
 
 
@@ -294,7 +297,7 @@ def nodeCreation(renderer, goal, file_data):
             faulty_data.append(file)
 
     if len(file_data) == len(faulty_data):
-        print(f"[ERROR] All files not recognized: {faulty_data}")
+        print(f"[ERROR] All files not recognized:\n{faulty_data}")
         hou.ui.displayMessage("Seems like none of the selected files could be matched to any predetermined or custom texture types. See console for info.")
         exit()
 
