@@ -1,6 +1,7 @@
 import hou
 import os
 
+#   ---THE VARIABLES---
 
 preset_data = {
 
@@ -33,7 +34,7 @@ supported_renderers = [
 "Mantra",
 ]
 
-# Fill in supportedTextures_data based on the preset_data
+## Fill in supportedTextures_data based on the preset_data
 for key, values in preset_data.items():
     for index, value in enumerate(values):
         if index == 0:
@@ -290,11 +291,13 @@ def nodeCreation(renderer, goal, file_data):
 
     ### Check for fauly data
     faulty_data = []
+    faulty_entry = []
 
     for metadata in file_data:
         file, name, ending, type = metadata
         if type == None:
             faulty_data.append(file)
+            faulty_entry.append(metadata)
 
     if len(file_data) == len(faulty_data):
         print(f"[ERROR] All files not recognized:\n{faulty_data}")
@@ -304,10 +307,10 @@ def nodeCreation(renderer, goal, file_data):
     if len(faulty_data) != 0:
         print(f"[INFO] Some files can't be properly recognized:\n{faulty_data}")
         selection = hou.ui.displayMessage("Seems like you selected some files could not be matched to any predetermined or custom texture types, should the texture nodes be created anyway? (See console for info)", buttons=("Create anyway", "Forget them"))
+
+        # Dont create image node for unrecognized texture types if user chooses so
         if selection == 1:
-            file_data.remove(metadata)    
-
-
+            file_data = [entry for entry in file_data if entry not in faulty_entry]
 
     print("[SUCCESS] Starting node creation.") 
     goalNode = hou.node(goal)
@@ -350,6 +353,7 @@ def nodeCreation(renderer, goal, file_data):
         MTLX_UV_Offset.setColor(col)
         
         MTLX_disp = goalNode.createNode("mtlxdisplacement")
+        MTLX_disp.parm("scale").set(0.2)
         subnet_output_disp.setNamedInput("suboutput", MTLX_disp, "out")
         
         MTLX_remap_disp = goalNode.createNode("mtlxremap")
