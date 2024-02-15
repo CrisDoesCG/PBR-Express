@@ -57,7 +57,7 @@ The script is currently able to create materials for Karma (MTLX Surface Shader)
 <details>
 <summary><strong> Unknown texture handling </strong></summary>
 <br>
-If the script does not recognize a certain type of texture, it will ask the user if the texture should be loaded into the material anyway or be forgotten.  
+The script currently supports albedo(diffuse), ao, height(displacement), normal, roughness, metallic and alpha(opacity) maps. If the script does not recognize a certain type of texture, it will ask the user if the texture should be loaded into the material anyway or be forgotten.  
 <br><br>
 </details> 
 
@@ -180,7 +180,7 @@ I don't have access to every single texture providing website (nor the patience 
 ## 🔮 Future Plans
 - Adding support for other render engines like Vray, Arnold, Redshift, ...
 - Adding support for more texture types like emission, translucency, sss, ...
-- Adding support for more types of texture name types (e.g. file names that are separated by `-`)
+- Adding support for more types of texture names (e.g. file names that are separated by `-`)
 - The option to create multiple sets of materials once the script is active
 - Some intuitive solutions for dealing with color spaces  
 

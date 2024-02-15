@@ -189,7 +189,7 @@ def debugMetadata(data):
         print(f"\n\t[DEBUG] Path: {file}")
         print(f"\t[DEBUG] File Name: {name}")
         print(f"\t[DEBUG] File Ending: {ending}")
-        print(f"\t[DEBUG] File Type: {type}\n")   
+        print(f"\t[DEBUG] Texture Type: {type}\n")   
 
 
 
