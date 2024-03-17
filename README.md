@@ -132,7 +132,8 @@ The tool uses the data from these _three variables_ to match each input file to 
 5. Choose the material library in which the material will be created.
 
 ### Tips
-- Use `CTRL` or `SHIFT` or `ALT` or `CMD` + `CLICK` on the shelf tool to activate "Quick Setup", bypassing the MAIN MENU and saving a few clicks per material creation.
+- Use `CTRL` on the shelf tool to activate "Quick Setup", bypassing the MAIN MENU and saving a few clicks per material creation.
+- Use `CTRL` + `SHIFT` on the shelf tool to activate "Mutliple Texture Quick Setup". You can now input multiple texture sets. Just press "Accept" after each set and you will be prompted with the same window again. Upon pressing "Cancel", the materials will be created.
 - If you already have a valid material network open, the tool won't ask for a path to a material library and will just take the active pane, saving a few clicks. (If there are multiple panes open, the tool will take the first one.)
 - The script writes logs to the console for every major action it takes. In the case of troubleshooting, it might be worth having a look.
 - For more troubleshooting, one could uncomment the function `debugMetadata()`, which is scattered all over the script, to get the metadata for each file printed to the console. This would be an example print: 
