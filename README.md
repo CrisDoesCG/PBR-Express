@@ -55,6 +55,13 @@ The script is currently able to create materials for Karma (MTLX Surface Shader)
 </details> 
 
 <details>
+<summary><strong> Bulk creation of materials </strong></summary>
+<br>
+See "Tips"
+<br><br>
+</details> 
+
+<details>
 <summary><strong> Unknown texture handling </strong></summary>
 <br>
 The script currently supports albedo(diffuse), ao, height(displacement), normal, roughness, metallic and alpha(opacity) maps. If the script does not recognize a certain type of texture, it will ask the user if the texture should be loaded into the material anyway or be forgotten.  
@@ -124,6 +131,7 @@ The tool uses the data from these _three variables_ to match each input file to 
 1. Press the shelf tool and you will be prompted with a file-chooser dialog where you can select your PBR textures.
 2. Choose your preferred textures. The files have to **end** with the texture type OR have it written **after** the resolution; everything has to be separated by an **underscore**: e.g. `websiteName_4k_displacement.exr` or `sample_texture_displacement_4k.exr`.
    - Some examples of file names that won't work with the script as of now: `sample_texture_4k-color.exr` , `color_websiteName.exr`
+   - DO NOT use any **semicolons that have a space before and after** them in your file paths. `C:/Desktop/my ; folder/texture.png` will break the script. Also, who names their folders like that?
 3. The MAIN MENU will appear, where you will have 3 options:
    1. **Quick Setup:** The script looks through _all_ of the possible naming conventions from `preset_data` and tries to match your input files to one of the texture types. If there are two or multiple files that are of the same texture type, the script will throw an error. **This is the recommended setting for using the script.**  
    2. **Preset List:** The user will be prompted with a list of all of the presets. Upon selecting one, the script will compare the input files to _only_ the namings from the selected preset. This was the intended way of using the tool when it was first created.
@@ -133,7 +141,7 @@ The tool uses the data from these _three variables_ to match each input file to 
 
 ### Tips
 - Use `CTRL` on the shelf tool to activate "Quick Setup", bypassing the MAIN MENU and saving a few clicks per material creation.
-- Use `CTRL` + `SHIFT` on the shelf tool to activate "Mutliple Texture Quick Setup". You can now input multiple texture sets. Just press "Accept" after each set and you will be prompted with the same window again. Upon pressing "Cancel", the materials will be created.
+- Use `CTRL` + `SHIFT` on the shelf tool to activate "Bulk Quick Setup". You can now input multiple texture sets. Just press "Accept" after each set and you will be prompted with the same window again. Upon pressing "Cancel", the materials will be created.
 - If you already have a valid material network open, the tool won't ask for a path to a material library and will just take the active pane, saving a few clicks. (If there are multiple panes open, the tool will take the first one.)
 - The script writes logs to the console for every major action it takes. In the case of troubleshooting, it might be worth having a look.
 - For more troubleshooting, one could uncomment the function `debugMetadata()`, which is scattered all over the script, to get the metadata for each file printed to the console. This would be an example print: 
@@ -170,7 +178,7 @@ I don't have access to every single texture providing website (nor the patience 
       - file_data: This is a variable that holds the data of each selected file. Things like the path to the file, the file name, the file extension and the recognized texture type. The data would first need to be unpacked, but again, it makes sense to look at how it has been done for the other renderers. I normally did it like this:
       ```
         for metadata in file_data:
-            file, name, ending, type = metadata      
+            file, name, ending, textureType = metadata      
       ```
 
 ### Adding render engines
@@ -180,9 +188,9 @@ I don't have access to every single texture providing website (nor the patience 
 
 ## 🔮 Future Plans
 - Adding support for other render engines like Vray, Arnold, Redshift, ...
-- Adding support for more texture types like emission, translucency, sss, ...
+- Adding support for more texture types like ~~emission~~, translucency, sss, ...
 - Adding support for more types of texture names (e.g. file names that are separated by `-`)
-- The option to create multiple sets of materials once the script is active
+- ~~The option to create multiple sets of materials once the script is active~~
 - Some intuitive solutions for dealing with color spaces  
 
 
