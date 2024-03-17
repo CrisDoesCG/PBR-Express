@@ -6,15 +6,15 @@ import os
 preset_data = {
 
     # NAME OF THE PRESET #              # THE NAMING CONVENTION #
-    "quixel.com":           ["Albedo", "AO", "Displacement", "Normal", "Roughness", "", ""],
-    "textures.com":         ["albedo", "ao", "height", "normal", "roughness", "metallic", "alpha"],
-    "polyhaven.com":        ["diff", "ao", "disp", "dx", "rough", "", ""],                                                  # metallic won't work since those are "arm" textures which would need special treatment
-    "cgbookcase.com":       ["BaseColor", "AO", "Height", "Normal", "Roughness", "Metallic", "Opacity"],
-    "freepbr.com":          ["albedo", "ao", "height", "normal-ogl", "roughness", "metallic", ""],
-    "ambientcg.com":        ["Color", "AmbientOcclusion", "Displacement", "NormalDX", "Roughness", "Metalness", "Opacity"],
-    "3dtextures.me":        ["basecolor", "ambientOcclusion", "height", "normal", "roughness", "metallic", "opacity"],
-    "pbrmaterials.com":     ["BaseColor", "AmbientOcclusion", "Height", "Normal", "Roughness", "Metallic", "Opacity"],
-    "texturecan.com":       ["color", "ao", "height", "opengl", "roughness", "metallic", "opacity"],
+    "quixel.com":           ["Albedo", "AO", "Displacement", "Normal", "Roughness", "", "", ""],
+    "textures.com":         ["albedo", "ao", "height", "normal", "roughness", "metallic", "alpha", "emissive"],
+    "polyhaven.com":        ["diff", "ao", "disp", "dx", "rough", "", "", ""],                                                  # metallic won't work since those are "arm" textures which would need special treatment
+    "cgbookcase.com":       ["BaseColor", "AO", "Height", "Normal", "Roughness", "Metallic", "Opacity", ""],
+    "freepbr.com":          ["albedo", "ao", "height", "normal-ogl", "roughness", "metallic", "", ""],
+    "ambientcg.com":        ["Color", "AmbientOcclusion", "Displacement", "NormalDX", "Roughness", "Metalness", "Opacity", ""],
+    "3dtextures.me":        ["basecolor", "ambientOcclusion", "height", "normal", "roughness", "metallic", "opacity", ""],
+    "pbrmaterials.com":     ["BaseColor", "AmbientOcclusion", "Height", "Normal", "Roughness", "Metallic", "Opacity", ""],
+    "texturecan.com":       ["color", "ao", "height", "opengl", "roughness", "metallic", "opacity", ""],
 
 }
 
@@ -27,12 +27,8 @@ supportedTextures_data = {
     "ROUGH": [],        # index = 4
     "METALLIC": [],     # index = 5
     "OPACITY": [],      # index = 6
+    "EMISSION": [],     # index = 7
 }
-
-supported_renderers = [
-"Karma",
-"Mantra",
-]
 
 ## Fill in supportedTextures_data based on the preset_data
 for key, values in preset_data.items():
@@ -50,14 +46,22 @@ for key, values in preset_data.items():
         elif index == 5:
             supportedTextures_data["METALLIC"].append(value) 
         elif index == 6:
-            supportedTextures_data["OPACITY"].append(value)             
+            supportedTextures_data["OPACITY"].append(value)      
+        elif index == 7:
+            supportedTextures_data["EMISSION"].append(value)              
 
 ## Remove duplicates from each list
 for key, values in supportedTextures_data.items():
     supportedTextures_data[key] = list(set(values))
-    
-    
-        
+
+## List of supported renderers    
+supported_renderers = [
+"Karma",
+"Mantra",
+]
+
+
+
 #   ---DEFINITIONS---
 
 ## System for converting this long string into a usable list to be used later
@@ -389,6 +393,7 @@ def nodeCreation(renderer, goal, file_data):
                 MTLX_Image_Node.parm("signature").set("float")
             if type == "NORMAL":
                 MTLX_normal.setNamedInput("in", MTLX_Image_Node, "out")
+                MTLX_Image_Node.parm("signature").set("vector3")
             if type == "ROUGH":
                 MTLX_StSf_Node.setNamedInput("specular_roughness", MTLX_Image_Node,"out")
                 MTLX_Image_Node.parm("signature").set("float")
@@ -397,7 +402,10 @@ def nodeCreation(renderer, goal, file_data):
                 MTLX_StSf_Node.setNamedInput("metalness", MTLX_Image_Node,"out")
             if type == "OPACITY":
                 # MTLX_Image_Node.parm("signature").set("float")        # For some reason that I dont understand the MTLX node wants a vector as input
-                MTLX_StSf_Node.setNamedInput("opacity", MTLX_Image_Node,"out")                
+                MTLX_StSf_Node.setNamedInput("opacity", MTLX_Image_Node,"out")  
+            if type == "EMISSION":
+                MTLX_Image_Node.parm("signature").set("float")
+                MTLX_StSf_Node.setNamedInput("emission", MTLX_Image_Node,"out")                                                
                 
         ### Check if there are no nodes of this type 
         if "DIFFUSE" not in detected_texture_types and "AO" not in detected_texture_types:
@@ -411,7 +419,7 @@ def nodeCreation(renderer, goal, file_data):
         print("[SUCCESS] All MTLX nodes created.")     
         goalNode.layoutChildren()
         
-    if renderer == "Mantra":
+    if renderer == "Mantra":        # I am aware that this implementations is pretty basic, but since Karma seems to be taking over I assume that most people will use MTLX anyway
         MANTRA_principled = goalNode.createNode("principledshader::2.0",set_name)
         MANTRA_principled.moveToGoodPosition()
 
@@ -441,7 +449,10 @@ def nodeCreation(renderer, goal, file_data):
             if type == "OPACITY":
                 MANTRA_principled.parm("opaccolor_useTexture").set(True)
                 MANTRA_principled.parm("opaccolor_texture").set(file)                
-                
+            if type == "EMISSION":
+                MANTRA_principled.parm("emitcolor_useTexture").set(True)
+                MANTRA_principled.parm("emitcolor_texture").set(file)                              
+
 
         print("[SUCCESS] All Mantra nodes created.")                          
             

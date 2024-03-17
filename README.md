@@ -64,7 +64,7 @@ The script currently supports albedo(diffuse), ao, height(displacement), normal,
 <details>
 <summary><strong> Preset-oriented workflow </strong></summary>
 <br>
-Every texture providing website has its own naming convention. Some call it albedo while others call it diffuse. This tool tries to streamline the process of differentiating between all of those naming conventions and having one central variable (`preset_data`) that is easily expandable and holds every website name (e.g. Quixel) with its corresponding naming convention (e.g. "Albedo", "AO", "Displacement", "Normal", "Roughness")
+Every texture providing website has its own naming convention. Some call it albedo while others call it diffuse. This tool tries to streamline the process of differentiating between all of those naming conventions and having one central variable (`preset_data`) that is easily expandable and holds every website name (e.g. Quixel) with its corresponding naming convention (e.g. "Albedo", "AO", "Displacement", ...)
 <br><br>
 </details> 
 
