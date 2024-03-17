@@ -9,8 +9,8 @@ preset_data = {
     "quixel.com":           ["Albedo", "AO", "Displacement", "Normal", "Roughness", "", "", ""],
     "textures.com":         ["albedo", "ao", "height", "normal", "roughness", "metallic", "alpha", "emissive"],
     "polyhaven.com":        ["diff", "ao", "disp", "dx", "rough", "", "", ""],                                                  # metallic won't work since those are "arm" textures which would need special treatment
-    "cgbookcase.com":       ["BaseColor", "AO", "Height", "Normal", "Roughness", "Metallic", "Opacity", ""],
-    "freepbr.com":          ["albedo", "ao", "height", "normal-ogl", "roughness", "metallic", "", ""],
+    "cgbookcase.com":       ["BaseColor", "AO", "Height", "Normal", "Roughness", "Metallic", "Opacity", "Emission"],
+    "freepbr.com":          ["albedo", "ao", "height", "normal-ogl", "roughness", "metallic", "", "emission"],
     "ambientcg.com":        ["Color", "AmbientOcclusion", "Displacement", "NormalDX", "Roughness", "Metalness", "Opacity", ""],
     "3dtextures.me":        ["basecolor", "ambientOcclusion", "height", "normal", "roughness", "metallic", "opacity", ""],
     "pbrmaterials.com":     ["BaseColor", "AmbientOcclusion", "Height", "Normal", "Roughness", "Metallic", "Opacity", ""],
@@ -63,6 +63,12 @@ supported_renderers = [
 
 
 #   ---DEFINITIONS---
+## System for prompting the user with a file chooser dialog
+def getTextureSet():
+    userInput = hou.ui.selectFile(title=("Choose one of the textures or input the folder path."), file_type=hou.fileType.Image, multiple_select=True, image_chooser=True)  
+    return userInput
+
+
 
 ## System for converting this long string into a usable list to be used later
 def validFileTypes():
@@ -73,15 +79,17 @@ def validFileTypes():
     
     return valid_file_type_list
     
+
+
 ## System for checking the files from the hou.ui.selectFile() function and creatig a metadata tuple for each file. Then combining all file tuples into a metadata_list
-def textureFinder(input):
+def textureFinder(inputFiles):
     
-    if len(input) == 0:
+    if len(inputFiles) == 0:
         print("[INFO] Script has been canceled.")
         hou.ui.displayMessage("Script has been canceled.")
         exit()     
         
-    input_files_clean = input.split(" ; ")
+    input_files_clean = inputFiles.split(" ; ")
         
     metadata_list = []       
     invalid_fileTypes = []        
@@ -91,7 +99,8 @@ def textureFinder(input):
     for file in input_files_clean:
         ### Check if files types are supported
         is_valid = False
-        for element in validFileTypes():
+        validFileEndings = validFileTypes()
+        for element in validFileEndings:
             if file.endswith(element):
                 is_valid = True
                 break
@@ -105,16 +114,26 @@ def textureFinder(input):
             ending = ending = name.split("_")[-2]
         else:
             ending = name.split("_")[-1]
-        type = None           
+        textureType = None           
                 
-        metadata = (file,name,ending,type)                
+        metadata = (file,name,ending,textureType)                
         metadata_list.append(metadata) 
         
         file_endings.append(ending)
-        
-    ### Error checking for invalid file types or ending duplicates        
 
-    if len(file_endings) != len(set(file_endings)):
+
+    ### Error checking for invalid file types or ending duplicates
+    ### Count occurrences of each element
+    file_counts = {}
+    for ending in file_endings:
+        if ending in file_counts:
+            file_counts[ending] += 1
+        else:
+            file_counts[ending] = 1
+
+    ### Print duplicates
+    duplicates = {key: value for key, value in file_counts.items() if value > 1}
+    if duplicates:
         print(f"[ERROR] Duplicate file endings detected.")
         hou.ui.displayMessage("Seems like you have selected duplicate file endings (multiple normal maps for example).", title=("BZZ... WRONG"))
         exit()
@@ -124,7 +143,7 @@ def textureFinder(input):
         print(f"[ERROR] List of supported image files: {str(validFileTypes())}")        
         hou.ui.displayMessage("Seems like one of your files is not an image file, check the console for more info.", title=("BZZ... WRONG"))
         exit()           
-        
+
     print("[SUCCESS] Input files seem valid.")                     
     print("[SUCCESS] Metadata for each file was written.")        
     return metadata_list            
@@ -137,25 +156,25 @@ def metadataAssign(old_data):
     unique_type = []
 
     for metadata in old_data:
-        file, name, ending, type = metadata
+        file, name, ending, textureType = metadata
         for texture_type, aliases in supportedTextures_data.items():
             if ending in aliases:
-                type = texture_type
+                textureType = texture_type
                 break 
 
-        metadata = (file,name,ending,type)
+        metadata = (file,name,ending,textureType)
                 
         quick_list.append(metadata)  
 
-    ### Check if there are multiple files of the same type   
+    ### Check if there are multiple files of the same textureType   
     for file in quick_list:
         t = file[3]
-        if t == None:       # Checking so we can have multiple files that are of the type "None"
+        if t == None:       # Checking so we can have multiple files that are of the textureType "None"
             pass
         else:            
             if t in unique_type:
-                print(f"[ERROR] Multiple files of the same type detected: {t}")
-                hou.ui.displayMessage(f"Seems like you have selected multiple files of the same type, check the console for more info", title=("BZZ... WRONG"))        
+                print(f"[ERROR] Multiple files of the same textureType detected: {t}")
+                hou.ui.displayMessage(f"Seems like you have selected multiple files of the same textureType, check the console for more info", title=("BZZ... WRONG"))        
                 exit()
             else:
                 unique_type.append(t)            
@@ -170,14 +189,14 @@ def metadataCheck(naming_convention, old_data):
 
     for metadata in old_data:
         used_names = []
-        file, name, ending, type = metadata
+        file, name, ending, textureType = metadata
         if ending in naming_convention:
             index = naming_convention.index(ending)
 
-            type, values = list(supportedTextures_data.items())[index]
+            textureType, values = list(supportedTextures_data.items())[index]
                   
 
-        metadata = (file,name,ending,type)      
+        metadata = (file,name,ending,textureType)      
 
         check_list.append(metadata)
 
@@ -189,11 +208,11 @@ def metadataCheck(naming_convention, old_data):
 def debugMetadata(data):
     print("[DEBUG] Metadata of each selected file:")
     for metadata in data:
-        file, name, ending, type = metadata  
+        file, name, ending, textureType = metadata  
         print(f"\n\t[DEBUG] Path: {file}")
         print(f"\t[DEBUG] File Name: {name}")
         print(f"\t[DEBUG] File Ending: {ending}")
-        print(f"\t[DEBUG] Texture Type: {type}\n")   
+        print(f"\t[DEBUG] Texture Type: {textureType}\n")   
 
 
 
@@ -201,7 +220,7 @@ def presetHandler():
 
     preset_names = list(preset_data.keys())
     
-    preset_selection = hou.ui.selectFromList(preset_names, exclusive=True, title=("Preset Handler"), message=("All websites have a different naming convention for their textures. Choose one from here or type your own under 'preset_data'. More info at: "), column_header="Presets", width=500, height=200)
+    preset_selection = hou.ui.selectFromList(preset_names, exclusive=True, title=("Preset Handler"), message=("All websites have a different naming convention for their textures. Choose one from here or textureType your own under 'preset_data'. More info at: "), column_header="Presets", width=500, height=200)
         
     if len(preset_selection) == 0:
         print("[INFO] Script has been canceled.")
@@ -267,7 +286,7 @@ def goalSelection():
         if currentPane_parent.childTypeCategory().name() == "Vop":
 
             goalPath = currentPane_parent.path()
-            print("nice")
+
         else:
             goalPath = currentPane_path
         print(f"[SUCCESS] A valid destination for the nodes has been selected: {goalPath}") 
@@ -298,8 +317,8 @@ def nodeCreation(renderer, goal, file_data):
     faulty_entry = []
 
     for metadata in file_data:
-        file, name, ending, type = metadata
-        if type == None:
+        file, name, ending, textureType = metadata
+        if textureType == None:
             faulty_data.append(file)
             faulty_entry.append(metadata)
 
@@ -372,8 +391,8 @@ def nodeCreation(renderer, goal, file_data):
         MTLX_StSf_Node.setNamedInput("normal", MTLX_normal, "out")               
         
         for metadata in file_data:
-            file, name, ending, type = metadata
-            detected_texture_types.append(type)
+            file, name, ending, textureType = metadata
+            detected_texture_types.append(textureType)
             
             ### Bulk actions like creating multiple texture nodes, connecting to UV Nodes
             MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", name)  
@@ -382,32 +401,32 @@ def nodeCreation(renderer, goal, file_data):
             MTLX_Image_Node.setNamedInput("uvtiling", MTLX_UV_Tiling, "out")
             MTLX_Image_Node.setNamedInput("uvoffset", MTLX_UV_Offset, "out")            
             
-            ### Individual actions for each texture type
-            if type == "DIFFUSE":
+            ### Individual actions for each texture textureType
+            if textureType == "DIFFUSE":
                 MTLX_multiply.setNamedInput("in1", MTLX_Image_Node, "out")
-            if type == "AO":
+            if textureType == "AO":
                 MTLX_multiply.setNamedInput("in2", MTLX_Image_Node, "out")
                 MTLX_Image_Node.parm("signature").set("float")
-            if type == "DISP":
+            if textureType == "DISP":
                 MTLX_remap_disp.setNamedInput("in", MTLX_Image_Node, "out") 
                 MTLX_Image_Node.parm("signature").set("float")
-            if type == "NORMAL":
+            if textureType == "NORMAL":
                 MTLX_normal.setNamedInput("in", MTLX_Image_Node, "out")
                 MTLX_Image_Node.parm("signature").set("vector3")
-            if type == "ROUGH":
+            if textureType == "ROUGH":
                 MTLX_StSf_Node.setNamedInput("specular_roughness", MTLX_Image_Node,"out")
                 MTLX_Image_Node.parm("signature").set("float")
-            if type == "METALLIC":
+            if textureType == "METALLIC":
                 MTLX_Image_Node.parm("signature").set("float")
                 MTLX_StSf_Node.setNamedInput("metalness", MTLX_Image_Node,"out")
-            if type == "OPACITY":
+            if textureType == "OPACITY":
                 # MTLX_Image_Node.parm("signature").set("float")        # For some reason that I dont understand the MTLX node wants a vector as input
                 MTLX_StSf_Node.setNamedInput("opacity", MTLX_Image_Node,"out")  
-            if type == "EMISSION":
+            if textureType == "EMISSION":
                 MTLX_Image_Node.parm("signature").set("float")
                 MTLX_StSf_Node.setNamedInput("emission", MTLX_Image_Node,"out")                                                
                 
-        ### Check if there are no nodes of this type 
+        ### Check if there are no nodes of this textureType 
         if "DIFFUSE" not in detected_texture_types and "AO" not in detected_texture_types:
             MTLX_multiply.destroy()                            
         if "DISP" not in detected_texture_types:
@@ -424,32 +443,32 @@ def nodeCreation(renderer, goal, file_data):
         MANTRA_principled.moveToGoodPosition()
 
         for metadata in file_data:
-            file, name, ending, type = metadata
-            detected_texture_types.append(type)        
+            file, name, ending, textureType = metadata
+            detected_texture_types.append(textureType)        
         
-            ### Individual actions for each texture type
-            if type == "DIFFUSE":
+            ### Individual actions for each texture textureType
+            if textureType == "DIFFUSE":
                 MANTRA_principled.parm("basecolor_useTexture").set(True)
                 MANTRA_principled.parm("basecolor_texture").set(file)
-            if type == "AO":
+            if textureType == "AO":
                 MANTRA_principled.parm("occlusion_useTexture").set(True)
                 MANTRA_principled.parm("occlusion_texture").set(file)
-            if type == "DISP":
+            if textureType == "DISP":
                 MANTRA_principled.parm("dispTex_enable").set(True)
                 MANTRA_principled.parm("dispTex_texture").set(file)
-            if type == "NORMAL":
+            if textureType == "NORMAL":
                 MANTRA_principled.parm("baseBumpAndNormal_enable").set(True)
                 MANTRA_principled.parm("baseNormal_texture").set(file)
-            if type == "ROUGH":
+            if textureType == "ROUGH":
                 MANTRA_principled.parm("rough_useTexture").set(True)
                 MANTRA_principled.parm("rough_texture").set(file)
-            if type == "METALLIC":
+            if textureType == "METALLIC":
                 MANTRA_principled.parm("metallic_useTexture").set(True)
                 MANTRA_principled.parm("metallic_texture").set(file)  
-            if type == "OPACITY":
+            if textureType == "OPACITY":
                 MANTRA_principled.parm("opaccolor_useTexture").set(True)
                 MANTRA_principled.parm("opaccolor_texture").set(file)                
-            if type == "EMISSION":
+            if textureType == "EMISSION":
                 MANTRA_principled.parm("emitcolor_useTexture").set(True)
                 MANTRA_principled.parm("emitcolor_texture").set(file)                              
 
@@ -459,52 +478,72 @@ def nodeCreation(renderer, goal, file_data):
 #   ---EXECUTE DEFINITIONS---    
 print("\n\n\n[INFO] Starting PBR Express.") 
 
-input_files = hou.ui.selectFile(title=("Choose one of the textures or input the folder path."), file_type=hou.fileType.Image, multiple_select=True, image_chooser=True)  
-set_name = os.path.splitext(os.path.basename(input_files.split(" ; ")[0]))[0].rsplit('_', 1)[0]
+if kwargs["shiftclick"] and kwargs["ctrlclick"]:
+    check = 1
+    input_texture_sets = []
 
-file_data = textureFinder(input_files)
+    while check > 0:
+        input_files = getTextureSet()
+        check = len(input_files)
 
-if kwargs["shiftclick"] or kwargs["altclick"] or kwargs["ctrlclick"] or kwargs["cmdclick"]:
+        if check > 0:
+            input_texture_sets.append(input_files)
 
-    quick_data = metadataAssign(file_data)                  
-    
-    # debugMetadata(quick_data)
-    
-    print("[INFO] Quick setup has been initiated through the press of SHIFT / CNTRL / ALT / CMD.")
-    nodeCreation("Karma",goalSelection(),quick_data)     # Here I have decided that for my quick setup I want to set the renderer to be "Karma", change accordigly
+    for set in input_texture_sets:
+        set_name = os.path.splitext(os.path.basename(set.split(" ; ")[0]))[0].rsplit('_', 1)[0]
+        file_data = textureFinder(set)
+        quick_data = metadataAssign(file_data)
+        nodeCreation("Karma",goalSelection(),quick_data)   
+        
+    print("[INFO] Multiple Textures Quick setup has been initiated through the press of SHIFT + CNTRL.")
 
 else:
+    input_files = getTextureSet()
+    set_name = os.path.splitext(os.path.basename(input_files.split(" ; ")[0]))[0].rsplit('_', 1)[0]
 
-    ## Pop-up window: Choose setup type
-    selection = hou.ui.displayMessage("How do you want to create your setup?", title=("MAIN MENU"),buttons=("Quick Setup", "Preset List", "Custom Preset", "Cancel"))    
+    file_data = textureFinder(input_files)
 
-    if selection == 3:
-        print("[INFO] Script has been canceled.")
-        hou.ui.displayMessage("Script has been canceled.")
-        exit()
+    if kwargs["ctrlclick"]:
 
-    elif selection == 2:
-        naming_convention = presetCustom()
-        custom_data = metadataCheck(naming_convention, file_data)
-
-        # debugMetadata(custom_data)
-
-        nodeCreation(renderHandler(supported_renderers),goalSelection(),custom_data)
-
-    elif selection == 1:
-        naming_convention = presetHandler()
-        check_data = metadataCheck(naming_convention, file_data)
-
-        # debugMetadata(check_data)
-
-        nodeCreation(renderHandler(supported_renderers),goalSelection(),check_data)
-
-    elif selection == 0:
-        quick_data = metadataAssign(file_data) 
-
+        quick_data = metadataAssign(file_data)                  
+        
         # debugMetadata(quick_data)
+        
+        print("[INFO] Quick setup has been initiated through the press of CNTRL.")
+        nodeCreation("Karma",goalSelection(),quick_data)     # Here I have decided that for my quick setup I want to set the renderer to be "Karma", change accordigly
 
-        print("[SUCCESS] Quick setup has been initiated through the main menu")
-        nodeCreation(renderHandler(supported_renderers),goalSelection(),quick_data)
+    else:
+
+        ## Pop-up window: Choose setup textureType
+        selection = hou.ui.displayMessage("How do you want to create your setup?", title=("MAIN MENU"),buttons=("Quick Setup", "Preset List", "Custom Preset", "Cancel"))    
+
+        if selection == 3:
+            print("[INFO] Script has been canceled.")
+            hou.ui.displayMessage("Script has been canceled.")
+            exit()
+
+        elif selection == 2:
+            naming_convention = presetCustom()
+            custom_data = metadataCheck(naming_convention, file_data)
+
+            # debugMetadata(custom_data)
+
+            nodeCreation(renderHandler(supported_renderers),goalSelection(),custom_data)
+
+        elif selection == 1:
+            naming_convention = presetHandler()
+            check_data = metadataCheck(naming_convention, file_data)
+
+            # debugMetadata(check_data)
+
+            nodeCreation(renderHandler(supported_renderers),goalSelection(),check_data)
+
+        elif selection == 0:
+            quick_data = metadataAssign(file_data) 
+
+            # debugMetadata(quick_data)
+
+            print("[SUCCESS] Quick setup has been initiated through the main menu")
+            nodeCreation(renderHandler(supported_renderers),goalSelection(),quick_data)
 
 
