@@ -3,62 +3,27 @@ import os
 
 #   ---THE VARIABLES---
 
-preset_data = {
-
-    # NAME OF THE PRESET #              # THE NAMING CONVENTION #
-    "quixel.com":           ["Albedo", "AO", "Displacement", "Normal", "Roughness", "", "", ""],
-    "textures.com":         ["albedo", "ao", "height", "normal", "roughness", "metallic", "alpha", "emissive"],
-    "polyhaven.com":        ["diff", "ao", "disp", "dx", "rough", "", "", ""],                                                  # metallic won't work since those are "arm" textures which would need special treatment
-    "cgbookcase.com":       ["BaseColor", "AO", "Height", "Normal", "Roughness", "Metallic", "Opacity", "Emission"],
-    "freepbr.com":          ["albedo", "ao", "height", "normal-ogl", "roughness", "metallic", "", "emission"],
-    "ambientcg.com":        ["Color", "AmbientOcclusion", "Displacement", "NormalDX", "Roughness", "Metalness", "Opacity", ""],
-    "3dtextures.me":        ["basecolor", "ambientOcclusion", "height", "normal", "roughness", "metallic", "opacity", ""],
-    "pbrmaterials.com":     ["BaseColor", "AmbientOcclusion", "Height", "Normal", "Roughness", "Metallic", "Opacity", ""],
-    "texturecan.com":       ["color", "ao", "height", "opengl", "roughness", "metallic", "opacity", ""],
-
-}
-
-
-supportedTextures_data = {
-    "DIFFUSE": [],      # index = 0
-    "AO": [],           # index = 1
-    "DISP": [],         # index = 2
-    "NORMAL": [],       # index = 3
-    "ROUGH": [],        # index = 4
-    "METALLIC": [],     # index = 5
-    "OPACITY": [],      # index = 6
-    "EMISSION": [],     # index = 7
-}
-
-## Fill in supportedTextures_data based on the preset_data
-for key, values in preset_data.items():
-    for index, value in enumerate(values):
-        if index == 0:
-            supportedTextures_data["DIFFUSE"].append(value)
-        elif index == 1:
-            supportedTextures_data["AO"].append(value)
-        elif index == 2:
-            supportedTextures_data["DISP"].append(value)
-        elif index == 3:
-            supportedTextures_data["NORMAL"].append(value)
-        elif index == 4:
-            supportedTextures_data["ROUGH"].append(value)
-        elif index == 5:
-            supportedTextures_data["METALLIC"].append(value) 
-        elif index == 6:
-            supportedTextures_data["OPACITY"].append(value)      
-        elif index == 7:
-            supportedTextures_data["EMISSION"].append(value)              
-
-## Remove duplicates from each list
-for key, values in supportedTextures_data.items():
-    supportedTextures_data[key] = list(set(values))
-
 ## List of supported renderers    
 supported_renderers = [
 "Karma",
 "Mantra",
 ]
+
+supportedTextures_data = {
+    "DIFFUSE":      ['diffuse', 'Diffuse', 'diff', 'Diff', 'Albedo', 'albedo', 'color', 'Color', 'BaseColor', 'basecolor'],     
+    "AO":           ['ambientOcclusion', 'AmbientOcclusion', 'AO', 'ao'],           
+    "DISP":         ['disp', 'Displacement', 'Height', 'height'],        
+    "NORMAL":       ['Normal', 'normal', 'opengl', 'dx', 'NormalDX', 'normal-ogl'],      
+    "ROUGH":        ['roughness', 'Roughness', 'rough'],        
+    "METALLIC":     ['Metallic', 'metallic', 'Metalness'],    
+    "OPACITY":      ['opacity', 'alpha', 'Opacity'],     
+    "EMISSION":     ['Emission', 'emission', 'emissive'],     
+}
+
+## Remove duplicates from each list
+for key, values in supportedTextures_data.items():
+    supportedTextures_data[key] = list(set(values))
+
 
 
 
@@ -144,7 +109,7 @@ def textureFinder(inputFiles):
         hou.ui.displayMessage("Seems like one of your files is not an image file, check the console for more info.", title=("BZZ... WRONG"))
         exit()           
 
-    print("[SUCCESS] Input files seem valid.")                     
+    print("\n[SUCCESS] Input files seem valid.")                     
     print("[SUCCESS] Metadata for each file was written.")        
     return metadata_list            
         
@@ -215,45 +180,7 @@ def debugMetadata(data):
         print(f"\t[DEBUG] Texture Type: {textureType}\n")   
 
 
-
-def presetHandler():
-
-    preset_names = list(preset_data.keys())
     
-    preset_selection = hou.ui.selectFromList(preset_names, exclusive=True, title=("Preset Handler"), message=("All websites have a different naming convention for their textures. Choose one from here or textureType your own under 'preset_data'. More info at: "), column_header="Presets", width=500, height=200)
-        
-    if len(preset_selection) == 0:
-        print("[INFO] Script has been canceled.")
-        hou.ui.displayMessage("Script has been canceled.")
-        exit()
-        
-    preset_selection_name = preset_names[preset_selection[0]]
-    naming_convention = preset_data[preset_selection_name]
-    
-    print(f"[SUCCESS] A valid preset was selected: {preset_selection_name}")        
-    return naming_convention    
-    
-    
-    
-def presetCustom():
-
-    preset_list = list(supportedTextures_data.keys())
-
-    preset_custom = hou.ui.readMultiInput("Input the endings of your texture files.", preset_list, buttons=("Go!", "Nevermind..."), help= "I am helpful text", close_choice = 1)
-    
-    if preset_custom[0] == 1 or all(p == "" for p in preset_custom[1]):
-        print("[INFO] Script has been canceled.")
-        hou.ui.displayMessage("All right then. Keep your secrets...")
-        exit()
-    else:
-    
-        naming_convention = preset_custom[1] 
-        
-        print("[SUCCESS] A custom preset was created")  
-        return naming_convention  
-    
-        
-        
 def renderHandler(renderer_names):
     
     render_selection = hou.ui.selectFromList(renderer_names, exclusive=True, title=("Render Handler"), message=("message"), column_header="Renderers", width=500, height=200)
@@ -273,6 +200,7 @@ def goalSelection():
     
     ## Find active pane and use as goal if it is a valid vop network, else let the user input a destination for the nodes
     ### KNOWN BUG: IF YOU ARE INSIDE A SUBNETWORK THE SCRIPT ERRORS OUT!! 
+    ### KNOWN BUG: IF YOU ARE INSIDE A NORMAL VOP NETWORK THE SCRIPT ERRORS OUT!! 
     editors = [pane for pane in hou.ui.paneTabs() if isinstance(pane, hou.NetworkEditor) and pane.isCurrentTab()]
 
     currentPane = editors[-1].currentNode()
@@ -335,7 +263,7 @@ def nodeCreation(renderer, goal, file_data):
         if selection == 1:
             file_data = [entry for entry in file_data if entry not in faulty_entry]
 
-    print("[SUCCESS] Starting node creation.") 
+    print(f"[SUCCESS] Starting node creation for texture set: '{set_name}'.") 
     goalNode = hou.node(goal)
     col = hou.Color((0.98, 0.275, 0.275))
     detected_texture_types = []
@@ -435,7 +363,7 @@ def nodeCreation(renderer, goal, file_data):
         if "NORMAL" not in detected_texture_types:
             MTLX_normal.destroy()            
 
-        print("[SUCCESS] All MTLX nodes created.")     
+        print(f"[SUCCESS] All MTLX nodes for texture set '{set_name}' have been created.")     
         goalNode.layoutChildren()
         
     if renderer == "Mantra":        # I am aware that this implementations is pretty basic, but since Karma seems to be taking over I assume that most people will use MTLX anyway
@@ -473,14 +401,17 @@ def nodeCreation(renderer, goal, file_data):
                 MANTRA_principled.parm("emitcolor_texture").set(file)                              
 
 
-        print("[SUCCESS] All Mantra nodes created.")                          
+        print(f"[SUCCESS] All Mantra nodes for texture set '{set_name}' have been created.")                           
             
-#   ---EXECUTE DEFINITIONS---    
-print("\n\n\n[INFO] Starting PBR Express.") 
+#   ---EXECUTE DEFINITIONS---   
+print("------------------------------------------------")         
+print("[INFO] Starting PBR Express.") 
 
-if kwargs["shiftclick"] and kwargs["ctrlclick"]:
+if kwargs["shiftclick"] or kwargs["ctrlclick"]:
     check = 1
     input_texture_sets = []
+
+    print("[INFO] Bulk Textures setup has been initiated through the press of SHIFT / CNTRL.")
 
     while check > 0:
         input_files = getTextureSet()
@@ -489,61 +420,31 @@ if kwargs["shiftclick"] and kwargs["ctrlclick"]:
         if check > 0:
             input_texture_sets.append(input_files)
 
+    renderer = renderHandler(supported_renderers)
+
     for set in input_texture_sets:
         set_name = os.path.splitext(os.path.basename(set.split(" ; ")[0]))[0].rsplit('_', 1)[0]
         file_data = textureFinder(set)
         quick_data = metadataAssign(file_data)
-        nodeCreation("Karma",goalSelection(),quick_data)   
-        
-    print("[INFO] Multiple Textures Quick setup has been initiated through the press of SHIFT + CNTRL.")
+        nodeCreation(renderer,goalSelection(),quick_data)   
+     
+    print("\n[INFO] Ending script")
+    print("------------------------------------------------")      
 
 else:
+    
     input_files = getTextureSet()
     set_name = os.path.splitext(os.path.basename(input_files.split(" ; ")[0]))[0].rsplit('_', 1)[0]
 
     file_data = textureFinder(input_files)
 
-    if kwargs["ctrlclick"]:
-
-        quick_data = metadataAssign(file_data)                  
-        
-        # debugMetadata(quick_data)
-        
-        print("[INFO] Quick setup has been initiated through the press of CNTRL.")
-        nodeCreation("Karma",goalSelection(),quick_data)     # Here I have decided that for my quick setup I want to set the renderer to be "Karma", change accordigly
-
-    else:
-
-        ## Pop-up window: Choose setup textureType
-        selection = hou.ui.displayMessage("How do you want to create your setup?", title=("MAIN MENU"),buttons=("Quick Setup", "Preset List", "Custom Preset", "Cancel"))    
-
-        if selection == 3:
-            print("[INFO] Script has been canceled.")
-            hou.ui.displayMessage("Script has been canceled.")
-            exit()
-
-        elif selection == 2:
-            naming_convention = presetCustom()
-            custom_data = metadataCheck(naming_convention, file_data)
-
-            # debugMetadata(custom_data)
-
-            nodeCreation(renderHandler(supported_renderers),goalSelection(),custom_data)
-
-        elif selection == 1:
-            naming_convention = presetHandler()
-            check_data = metadataCheck(naming_convention, file_data)
-
-            # debugMetadata(check_data)
-
-            nodeCreation(renderHandler(supported_renderers),goalSelection(),check_data)
-
-        elif selection == 0:
-            quick_data = metadataAssign(file_data) 
-
-            # debugMetadata(quick_data)
-
-            print("[SUCCESS] Quick setup has been initiated through the main menu")
-            nodeCreation(renderHandler(supported_renderers),goalSelection(),quick_data)
+    quick_data = metadataAssign(file_data)                  
+    
+    # debugMetadata(quick_data)
+    
+    print("[INFO] Quick setup has been initiated.")
+    nodeCreation(renderHandler(supported_renderers),goalSelection(),quick_data)    
+    print("\n[INFO] Ending script")
+    print("------------------------------------------------")
 
 

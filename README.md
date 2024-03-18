@@ -36,14 +36,14 @@ Input your texture set, select your preferred renderer and the path to your mate
 <details>
 <summary><strong> Easy copy-paste installation </strong></summary>
 <br>
-No need to download anything, just copy and paste the raw code from PBR-Express.py as a shelf tool. See "Installation"
+No need to download anything, just copy and paste the raw code from PBR-Express.py as a shelf tool. See "Installation".
 <br><br>
 </details> 
 
 <details>
 <summary><strong> Texture-naming flexibility </strong></summary>
 <br>
-Supports any texture sets that have the texture type written at the end of the file name and it is separated by an underscore: e.g. `sample_texture_4k_displacement.exr` OR `sample_texture_displacement_4k.exr`. See "How to use"
+Supports any texture sets that have the texture type written at the end of the file name and it is separated by an underscore: e.g. `sample_texture_4k_displacement.exr`. Additionally, the resolution can be at the end of the name like in `sample_texture_displacement_4k.exr`. See "How to use" for more infos.
 <br><br>
 </details> 
 
@@ -57,47 +57,33 @@ The script is currently able to create materials for Karma (MTLX Surface Shader)
 <details>
 <summary><strong> Bulk creation of materials </strong></summary>
 <br>
-See "Tips"
+See "Tips".
 <br><br>
 </details> 
 
 <details>
 <summary><strong> Unknown texture handling </strong></summary>
 <br>
-The script currently supports albedo(diffuse), ao, height(displacement), normal, roughness, metallic and alpha(opacity) maps. If the script does not recognize a certain type of texture, it will ask the user if the texture should be loaded into the material anyway or be forgotten.  
+The script currently supports albedo(diffuse), ao, height(displacement), normal, roughness, metallic, alpha(opacity) and emission maps. If the script does not recognize a certain type of texture, it will ask the user if the texture should be loaded into the material anyway or be forgotten.  
 <br><br>
 </details> 
 
 <details>
 <summary><strong> Preset-oriented workflow </strong></summary>
 <br>
-Every texture providing website has its own naming convention. Some call it albedo while others call it diffuse. This tool tries to streamline the process of differentiating between all of those naming conventions and having one central variable (`preset_data`) that is easily expandable and holds every website name (e.g. Quixel) with its corresponding naming convention (e.g. "Albedo", "AO", "Displacement", ...)
+Every texture providing website has its own naming convention. Some call it albedo while others call it diffuse. This tool tries to streamline the process of differentiating between all of those naming conventions and having one central data variable (`supportedTexture_data`) that is easily expandable and holds every possible variation of a certain texture name. See "How it works".
 <br><br>
 </details> 
 
 <details>
 <summary><strong> Expandable from the ground up </strong></summary>
 <br>
-The script was created with easy expansion in mind. Not only can presets be added easily, but adding new texture types is also reasonably straightforward and with a bit of Python knowledge even support for new render engines can be added without waiting for this repo to be updated. See "Contributing" for more infos.
-<br><br>
-</details> 
-
-<details>
-<summary><strong> Custom naming conventions </strong></summary>
-<br>
-Don’t want to mess with the code to add your own preset? Choose `Custom setup` inside the main menu to be prompted with a window where you can input your own naming conventions. See "How to use" for more infos.
+The script was created with easy expansion in mind. New texture types are straightforward to expand and with a bit of Python knowledge even support for new render engines can be added without waiting for this repo to be updated. See "Contributing" for more infos.
 <br><br>
 </details> 
 
 <details>
 <summary><strong> Active node network detection </strong></summary>
-<br>
-See "Tips"
-<br><br>
-</details> 
-
-<details>
-<summary><strong> Shortcut for "Quick Setup" </strong></summary>
 <br>
 See "Tips"
 <br><br>
@@ -120,31 +106,26 @@ See "Tips"
 
 ## 📖 Manual
 ### How it works
-The tool uses the data from these _three variables_ to match each input file to a known texture type and create the proper material setup for the renderer of choice.   
+The tool uses the data from these _two main variables_ to match each input file to a known texture type and create the proper material setup for the renderer of choice.   
 
-   `preset_data`: This variable holds the name of a texture providing website and the naming conventions that they are using for each *texture type*. The order of the naming convention should always stay the same (e.g. 1st: Albedo map, 2nd: AO map, ...). If a website does not provide a certain texture type, an empty placeholder (`""`) has to be inputed instead.   
-   `supportedTextures_data`: This variable (at the start of the script still empty) holds all of the supported texture types in the exact order that they should come from `preset_data`. It will later be given values by the script based on what comes in from `preset_data` while removing duplicates.  
    `supported_renderers`: This is a simple list of all of the supported renderers.
 
+   `supportedTextures_data`: This variable holds all of the supported texture types (METALLIC) with every variation of name it can have. (['Metallic', 'metallic', 'Metalness'])
 
 ### How to use
 1. Press the shelf tool and you will be prompted with a file-chooser dialog where you can select your PBR textures.
 2. Choose your preferred textures. The files have to **end** with the texture type OR have it written **after** the resolution; everything has to be separated by an **underscore**: e.g. `websiteName_4k_displacement.exr` or `sample_texture_displacement_4k.exr`.
    - Some examples of file names that won't work with the script as of now: `sample_texture_4k-color.exr` , `color_websiteName.exr`
-   - DO NOT use any **semicolons that have a space before and after** them in your file paths. `C:/Desktop/my ; folder/texture.png` will break the script. Also, who names their folders like that?
-3. The MAIN MENU will appear, where you will have 3 options:
-   1. **Quick Setup:** The script looks through _all_ of the possible naming conventions from `preset_data` and tries to match your input files to one of the texture types. If there are two or multiple files that are of the same texture type, the script will throw an error. **This is the recommended setting for using the script.**  
-   2. **Preset List:** The user will be prompted with a list of all of the presets. Upon selecting one, the script will compare the input files to _only_ the namings from the selected preset. This was the intended way of using the tool when it was first created.
-   3. **Custom Preset:** The user will be prompted with a list of all of the supported texture types. The user can now input custom namings for all of the texture types. Those will be compared to the input files. Using this option makes sense if you have a one off naming convention for a texture set and don't want to mess with the script itself. Those new namings won't get saved and you will have to input them again for each new material using this convention. When wanting to use a custom naming convention multiple times, it is recommended that one types it into `preset_data`. See ["Adding missing presets"](#adding-missing-presets) for more informations.
+   - If there are two or multiple files that are of the same texture type, the script will throw an error. 
+   - DO NOT use any **semicolons that have a space before and after** them in your file paths. `C:/Desktop/my ; folder/texture.png` will break the script. Also, who names their folders like that? 
 4. Choose the preferred renderer. 
-5. Choose the material library in which the material will be created.
+5. Choose the material library in which the material will be created. If this dialog does not come up, that means that the script recognized your open network tab as a valid VOP network and will drop the materials there. 
+> ***Some known limitations:*** If you have an open non-material VOP window open (for example an Attribute VOP node), the script will error out when trying to make the material. Also, if one tries to run the script inside a (VOP) subnetwork, it will also error out, even if the subnetwork is a valid material VOP.  
 
 ### Tips
-- Use `CTRL` on the shelf tool to activate "Quick Setup", bypassing the MAIN MENU and saving a few clicks per material creation.
-- Use `CTRL` + `SHIFT` on the shelf tool to activate "Bulk Quick Setup". You can now input multiple texture sets. Just press "Accept" after each set and you will be prompted with the same window again. Upon pressing "Cancel", the materials will be created.
-- If you already have a valid material network open, the tool won't ask for a path to a material library and will just take the active pane, saving a few clicks. (If there are multiple panes open, the tool will take the first one.)
+- Use `CTRL` or `SHIFT` on the shelf tool to activate "Bulk Quick Setup". You can now input multiple texture sets. Just press "Accept" after each set and you will be prompted with the same window again. Upon pressing "Cancel", the materials will be created.
 - The script writes logs to the console for every major action it takes. In the case of troubleshooting, it might be worth having a look.
-- For more troubleshooting, one could uncomment the function `debugMetadata()`, which is scattered all over the script, to get the metadata for each file printed to the console. This would be an example print: 
+- For more troubleshooting, one could uncomment the function `debugMetadata()`, which is located at the end of the script to get the metadata for each file printed to the console. This would be an example print: 
 
 ```
 [DEBUG] Metadata of each selected file:
@@ -164,14 +145,14 @@ This chapter serves as a guide for extending the script to meet your individual 
 > _🚨 Disclaimer 🚨_ Just a heads up: this is my first attempt at a substantial script, and my programming knowledge is self-taught. While the tool does its job quite well, I can't promise that contributing will be a walk in the park. Things might not be as straightforward or intuitive; your patience and understanding are greatly appreciated!
 
 
-### Adding missing presets 
-This is something everyone can do with minimal Python or scripting knowledge. Just follow the already existing preset structure inside the variable `preset_data` and add your own presets. The order should always stay the same; just look at the other entries for guidance. Additionally, you can take a look at the next variable, `supportedTextures_data`, which uses the same order. If the website doesn't provide a certain texture type, for example, metallic textures, just leave an empty string `""` in the space where it would normally sit.
+### Adding missing texture names
+This is something everyone can do with minimal Python or scripting knowledge. Just follow the already existing structure inside the variable `supportedTextures_data` and add your own name variations. 
 
-I don't have access to every single texture providing website (nor the patience to do so), and since every website has its own naming conventions, there seem to be endless possibilities for naming variations. The more people contribute with websites and their naming conventions, the better the tool will be at recognizing every file name from every website.
+I don't have access to every single texture providing website (nor the patience to do so), and since every website has its own naming conventions, there seem to be endless possibilities for naming variations. The more people contribute with their naming variations, the better the tool will be at recognizing every file name from every website.
 
 ### Adding missing texture types
    1. Add the name of the texture type inside `supportedTextures_data`.
-   2. A few lines below you would also need to add it in the for each loop `for key, values in preset_data.items():`, just follow the same structure as the texture types while using the next availible index number.
+   2. Add your new naming variations following the same conventions as the other texture types above.
    3. Now you need to make the actual code for the node creation inside `def nodeCreation()`. Again it's best to look at how the other texture nodes are being created and connected to other nodes. The most important variables will be:
       - set_name: The name of the texture set, e.g. For a file named `myTextures_4k_normal.png`, the set_name would be `myTextures`.
       - goalNode: This is the network where the nodes will be created.
@@ -191,7 +172,8 @@ I don't have access to every single texture providing website (nor the patience 
 - Adding support for more texture types like ~~emission~~, translucency, sss, ...
 - Adding support for more types of texture names (e.g. file names that are separated by `-`)
 - ~~The option to create multiple sets of materials once the script is active~~
-- Some intuitive solutions for dealing with color spaces  
+- Some intuitive solutions for dealing with color spaces
+- ~~Make adding new naming variations easier~~ 
 
 
 ## ❤️ Support
