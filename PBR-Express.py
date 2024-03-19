@@ -293,16 +293,15 @@ def nodeCreation(renderer, goal, file_data):
         MTLX_StSf_Node = goalNode.createNode("mtlxstandard_surface", set_name)
         subnet_output_surface.setNamedInput("suboutput", MTLX_StSf_Node, "out")
 
-        MTLX_UV_Tiling = goalNode.createNode("mtlxconstant", "UVTiling")
-        MTLX_UV_Tiling.parm("signature").set("vector2")
-        MTLX_UV_Tiling.parm("value_vector2x").set(1)
-        MTLX_UV_Tiling.parm("value_vector2y").set(1)
-        MTLX_UV_Tiling.setColor(col)
-        
-        MTLX_UV_Offset = goalNode.createNode("mtlxconstant", "UVOffset")
-        MTLX_UV_Offset.parm("signature").set("vector2")
-        MTLX_UV_Offset.setColor(col)
-        
+        MTLX_UV_Attrib = goalNode.createNode("usdprimvarreader", "UVRotate")
+        MTLX_UV_Attrib.parm("signature").set("float2")
+        MTLX_UV_Attrib.parm("varname").set("uv")
+        MTLX_UV_Attrib.setColor(col)
+
+        MTLX_UV_Place = goalNode.createNode("mtlxplace2d", "UVAttrib")
+        MTLX_UV_Place.setColor(col)
+        MTLX_UV_Place.setNamedInput("texcoord", MTLX_UV_Attrib, "result")
+
         MTLX_disp = goalNode.createNode("mtlxdisplacement")
         MTLX_disp.parm("scale").set(0.2)
         subnet_output_disp.setNamedInput("suboutput", MTLX_disp, "out")
@@ -326,8 +325,7 @@ def nodeCreation(renderer, goal, file_data):
             MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", name)  
             MTLX_Image_Node.parm("file").set(file)
             
-            MTLX_Image_Node.setNamedInput("uvtiling", MTLX_UV_Tiling, "out")
-            MTLX_Image_Node.setNamedInput("uvoffset", MTLX_UV_Offset, "out")            
+            MTLX_Image_Node.setNamedInput("texcoord", MTLX_UV_Place, "out")               
             
             ### Individual actions for each texture textureType
             if textureType == "DIFFUSE":
@@ -348,7 +346,6 @@ def nodeCreation(renderer, goal, file_data):
                 MTLX_Image_Node.parm("signature").set("float")
                 MTLX_StSf_Node.setNamedInput("metalness", MTLX_Image_Node,"out")
             if textureType == "OPACITY":
-                # MTLX_Image_Node.parm("signature").set("float")        # For some reason that I dont understand the MTLX node wants a vector as input
                 MTLX_StSf_Node.setNamedInput("opacity", MTLX_Image_Node,"out")  
             if textureType == "EMISSION":
                 MTLX_Image_Node.parm("signature").set("float")
