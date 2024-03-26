@@ -272,7 +272,14 @@ def nodeCreation(renderer, goal, file_data):
         ### Create subnet
         goalNode = goalNode.createNode("subnet",set_name)
         goalNode.moveToGoodPosition()
-        
+
+        parameters = goalNode.parmTemplateGroup()
+        new_param = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1)
+        parameters.append(new_param)
+        goalNode.setParmTemplateGroup(parameters) 
+
+        goalNode.parm("tabmenumask").set("MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput")     
+
         children = goalNode.allSubChildren()
         for c in children:
             c.destroy()
@@ -282,7 +289,7 @@ def nodeCreation(renderer, goal, file_data):
         subnet_output_surface.parm("parmname").set("surface")
         subnet_output_surface.parm("parmlabel").set("Surface")
         subnet_output_surface.parm("parmtype").set("surface")
-        
+
         subnet_output_disp = goalNode.createNode("subnetconnector","displacement_output")
         subnet_output_disp.parm("connectorkind").set("output")
         subnet_output_disp.parm("parmname").set("displacement")
