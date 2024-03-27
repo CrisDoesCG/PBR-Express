@@ -364,6 +364,11 @@ def nodeCreation(renderer, goal, file_data):
         MANTRA_principled = goalNode.createNode("principledshader::2.0",set_name)
         MANTRA_principled.moveToGoodPosition()
 
+        MANTRA_principled.parm("basecolorr").set(1)
+        MANTRA_principled.parm("basecolorg").set(1)
+        MANTRA_principled.parm("basecolorb").set(1)
+        
+
         for metadata in file_data:
             file, name, ending, textureType = metadata
             detected_texture_types.append(textureType)        
