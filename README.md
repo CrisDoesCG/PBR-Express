@@ -1,4 +1,4 @@
-# <img src="https://static.sidefx.com/images/apple-touch-icon.png" height="24" width="24" alt="Houdini Logo"> <img src="https://s3.dualstack.us-east-2.amazonaws.com/pythondotorg-assets/media/community/logos/python-logo-only.png" height="25" width="20" alt="Python Logo"> PBR-Express
+# 🚂 PBR-Express
 > PBR-Express is a handy tool for Houdini that makes it quick and easy to create PBR materials. Just toss in your texture files and the tool will instantly set up a material for your preferred renderer. It's all about saving time on the boring stuff, so VFX artists can focus more on getting creative with their materials. Enjoy a smooth process that turns textures into usable materials in Houdini!
 
 ## 📖 Table of Contents
