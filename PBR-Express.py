@@ -290,17 +290,17 @@ def nodeCreation(renderer, goal, file_data):
         MTLX_StSf_Node = goalNode.createNode("mtlxstandard_surface", set_name)
         subnet_output_surface.setNamedInput("suboutput", MTLX_StSf_Node, "out")
 
-        MTLX_UV_Attrib = goalNode.createNode("usdprimvarreader", "UVRotate")
+        MTLX_UV_Attrib = goalNode.createNode("usdprimvarreader", "UVAttrib")
         MTLX_UV_Attrib.parm("signature").set("float2")
         MTLX_UV_Attrib.parm("varname").set("uv")
         MTLX_UV_Attrib.setColor(col)
 
-        MTLX_UV_Place = goalNode.createNode("mtlxplace2d", "UVAttrib")
+        MTLX_UV_Place = goalNode.createNode("mtlxplace2d", "UVControl")
         MTLX_UV_Place.setColor(col)
         MTLX_UV_Place.setNamedInput("texcoord", MTLX_UV_Attrib, "result")
 
         MTLX_disp = goalNode.createNode("mtlxdisplacement")
-        MTLX_disp.parm("scale").set(0.2)
+        MTLX_disp.parm("scale").set(0.05)
         subnet_output_disp.setNamedInput("suboutput", MTLX_disp, "out")
         
         MTLX_remap_disp = goalNode.createNode("mtlxremap")
