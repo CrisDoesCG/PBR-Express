@@ -92,7 +92,7 @@ See "Tips"
 
 ## 📋 Requirements
 * Houdini license of **any** kind (Apprentice, Core, Indie, FX, ...)
-* Houdini 20.0.590 (_may_ work with older versions, but it's untested.)
+* Houdini 20.0.625 (_may_ work with older versions, but it's untested.)
 * Python 3 comes preinstalled with Houdini (may vary for Linux/Mac; check the [official documentation](https://www.sidefx.com/docs/houdini/hom/index.html#which-python))
 
 ## 🛠️ Installation
@@ -120,10 +120,11 @@ The tool uses the data from these _two main variables_ to match each input file 
    - DO NOT use any **semicolons that have a space before and after** them in your file paths. `C:/Desktop/my ; folder/texture.png` will break the script. Also, who names their folders like that? 
 4. Choose the preferred renderer. 
 5. Choose the material library in which the material will be created. If this dialog does not come up, that means that the script recognized your open network tab as a valid VOP network and will drop the materials there. 
-> ***Some known limitations:*** If you have an open non-material VOP window open (for example an Attribute VOP node), the script will error out when trying to make the material. Also, if one tries to run the script inside a (VOP) subnetwork, it will also error out, even if the subnetwork is a valid material VOP.  
+> ***Some known limitations:*** If you have an open non-material VOP window open (for example an Attribute VOP node), the script will error out when trying to make the material, since no material nodes can be created there. Also, if one tries to run the script inside a (VOP) subnetwork, it will also error out, even if the subnetwork is a valid material VOP.  
 
 ### Tips
 - Use `CTRL` or `SHIFT` on the shelf tool to activate "Bulk Quick Setup". You can now input multiple texture sets. Just press "Accept" after each set and you will be prompted with the same window again. Upon pressing "Cancel", the materials will be created.
+- You can save yourself a click if you have already a valid material network open as your active node network. The script will assume that that is where you want your materials to be created and won't ask for a path. 
 - The script writes logs to the console for every major action it takes. In the case of troubleshooting, it might be worth having a look.
 - For more troubleshooting, one could uncomment the function `debugMetadata()`, which is located at the end of the script to get the metadata for each file printed to the console. This would be an example print: 
 
