@@ -1,7 +1,14 @@
+# Documentation, full feature list and license can be found here: https://github.com/CrisDoesCG/PBR-Express
+
+# Created by Cristian Cornesteanu
+# Written and tested in Houdini Indie 20.0.625
+
+
+
 import hou
 import os
 
-#   ---THE VARIABLES---
+#   ---VARIABLES---
 
 ## List of supported renderers    
 supported_renderers = [
@@ -9,6 +16,7 @@ supported_renderers = [
 "Mantra",
 ]
 
+## List of all possible
 supportedTextures_data = {
     "DIFFUSE":      ['diffuse', 'Diffuse', 'diff', 'Diff', 'Albedo', 'albedo', 'color', 'Color', 'BaseColor', 'basecolor'],     
     "AO":           ['ambientOcclusion', 'AmbientOcclusion', 'AO', 'ao'],           
@@ -23,6 +31,7 @@ supportedTextures_data = {
 ## Remove duplicates from each list
 for key, values in supportedTextures_data.items():
     supportedTextures_data[key] = list(set(values))
+
 
 
 
@@ -59,7 +68,7 @@ def textureFinder(inputFiles):
     metadata_list = []       
     invalid_fileTypes = []        
     file_endings = [] 
-    resolutions = ["1k", "1K", "2k", "2K", "4k", "4K", "8k", "8K", "16k", "16K", "32k", "32K"]
+    resolutions = ["1k", "1K", "2k", "2K", "4k", "4K", "6k", "6K", "8k", "8K", "16k", "16K", "32k", "32K"]
 
     for file in input_files_clean:
         ### Check if files types are supported
@@ -75,7 +84,7 @@ def textureFinder(inputFiles):
         ### Create metadata    
         fullname = file.split("/")[-1]
         name, extension = os.path.splitext(fullname)
-        if name.split("_")[-1] in resolutions:      # If the last word after the sepparator is a resolution, fall back to the 2nd word
+        if name.split("_")[-1] in resolutions:      # If the last word after the sepparator is a resolution from the list above, fall back to the 2nd word
             ending = ending = name.split("_")[-2]
         else:
             ending = name.split("_")[-1]
@@ -112,9 +121,10 @@ def textureFinder(inputFiles):
     print("\n[SUCCESS] Input files seem valid.")                     
     print("[SUCCESS] Metadata for each file was written.")        
     return metadata_list            
-        
 
 
+
+## System for cleaning up the data from the tuple created in textureFinder()
 def metadataAssign(old_data):
 
     quick_list = []
@@ -148,28 +158,7 @@ def metadataAssign(old_data):
 
 
 
-def metadataCheck(naming_convention, old_data):
-
-    check_list = []
-
-    for metadata in old_data:
-        used_names = []
-        file, name, ending, textureType = metadata
-        if ending in naming_convention:
-            index = naming_convention.index(ending)
-
-            textureType, values = list(supportedTextures_data.items())[index]
-                  
-
-        metadata = (file,name,ending,textureType)      
-
-        check_list.append(metadata)
-
-    print("[SUCCESS] File metadata matches to corresponding texture types.") 
-    return check_list          
-
-
-
+## System for printing out the tuple that was created in textureFinder(), this is only used for debugging
 def debugMetadata(data):
     print("[DEBUG] Metadata of each selected file:")
     for metadata in data:
@@ -180,7 +169,8 @@ def debugMetadata(data):
         print(f"\t[DEBUG] Texture Type: {textureType}\n")   
 
 
-    
+
+## System for promting the user with a window in which the desired render engine can be selected  
 def renderHandler(renderer_names):
     
     render_selection = hou.ui.selectFromList(renderer_names, exclusive=True, title=("Render Handler"), message=("message"), column_header="Renderers", width=500, height=200)
@@ -195,10 +185,9 @@ def renderHandler(renderer_names):
     return render_selection_name
 
     
-    
+
+## System for creating finding active pane and use that as goal for the created nodes if it is a valid vop network, else let the user input a destination for the nodes
 def goalSelection():
-    
-    ## Find active pane and use as goal if it is a valid vop network, else let the user input a destination for the nodes
     ### KNOWN BUG: IF YOU ARE INSIDE A SUBNETWORK THE SCRIPT ERRORS OUT!! 
     ### KNOWN BUG: IF YOU ARE INSIDE A NORMAL VOP NETWORK THE SCRIPT ERRORS OUT!! 
     editors = [pane for pane in hou.ui.paneTabs() if isinstance(pane, hou.NetworkEditor) and pane.isCurrentTab()]
@@ -236,8 +225,9 @@ def goalSelection():
 
     return goalPath
         
-        
 
+
+## System for the actual node creation 
 def nodeCreation(renderer, goal, file_data):
 
     ### Check for fauly data
@@ -407,6 +397,10 @@ def nodeCreation(renderer, goal, file_data):
 
         print(f"[SUCCESS] All Mantra nodes for texture set '{set_name}' have been created.")                           
             
+
+
+
+
 #   ---EXECUTE DEFINITIONS---   
 print("------------------------------------------------")         
 print("[INFO] Starting PBR Express.") 
