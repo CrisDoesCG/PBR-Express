@@ -21,7 +21,7 @@ supportedTextures_data = {
     "DIFFUSE":      ['diffuse', 'Diffuse', 'diff', 'Diff', 'Albedo', 'albedo', 'color', 'Color', 'BaseColor', 'basecolor'],     
     "AO":           ['ambientOcclusion', 'AmbientOcclusion', 'AO', 'ao'],           
     "DISP":         ['disp', 'Displacement', 'Height', 'height'],        
-    "NORMAL":       ['Normal', 'normal', 'opengl', 'dx', 'NormalDX', 'normal-ogl'],      
+    "NORMAL":       ['Normal', 'normal', 'opengl', 'dx', 'NormalDX', 'normal-ogl', 'nor'],      
     "ROUGH":        ['roughness', 'Roughness', 'rough'],        
     "METALLIC":     ['Metallic', 'metallic', 'Metalness'],    
     "OPACITY":      ['opacity', 'alpha', 'Opacity'],     
@@ -259,21 +259,40 @@ def nodeCreation(renderer, goal, file_data):
     detected_texture_types = []
     
     if renderer == "Karma":
-        ### Create subnet
+        ### Create subnet with all parameters
         goalNode = goalNode.createNode("subnet",set_name)
         goalNode.moveToGoodPosition()
 
         parameters = goalNode.parmTemplateGroup()
-        new_param = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1)
-        parameters.append(new_param)
+
+        newParm_hidingFolder = hou.FolderParmTemplate("mtlxBuilder","MaterialX Builder",folder_type=hou.folderType.Collapsible)
+        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1)
+
+        newParm_hidingFolder.addParmTemplate(newParam_tabMenu)
+
+        newParam_uvScale = hou.FloatParmTemplate("uvscale", "UV Scale", 2, default_value=(1,1))
+        newParam_uvOffset = hou.FloatParmTemplate("uvoffset", "UV Offset", 2, default_value=(0,0))
+        newParam_uvRotate = hou.FloatParmTemplate("uvrotate", "UV Rotate", 1)
+        newParam_separator = hou.SeparatorParmTemplate("separator")
+        newParam_displacement = hou.FloatParmTemplate("displacement", "Displacement", 1)
+
+        parameters.append(newParm_hidingFolder)
+        parameters.append(newParam_uvScale)
+        parameters.append(newParam_uvOffset)
+        parameters.append(newParam_uvRotate)
+        parameters.append(newParam_separator)
+        parameters.append(newParam_displacement)
+        
         goalNode.setParmTemplateGroup(parameters) 
-
         goalNode.parm("tabmenumask").set("MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput")     
+        goalNode.parm("displacement").set(0.05)
 
+        ### Destroy pre-made nodes
         children = goalNode.allSubChildren()
         for c in children:
             c.destroy()
     
+        ### Create material, UV controls and additional nodes
         subnet_output_surface = goalNode.createNode("subnetconnector","surface_output")
         subnet_output_surface.parm("connectorkind").set("output")
         subnet_output_surface.parm("parmname").set("surface")
@@ -286,7 +305,6 @@ def nodeCreation(renderer, goal, file_data):
         subnet_output_disp.parm("parmlabel").set("Displacement")
         subnet_output_disp.parm("parmtype").set("displacement")        
         
-        ### Create material, UV controls and additional nodes
         MTLX_StSf_Node = goalNode.createNode("mtlxstandard_surface", set_name)
         subnet_output_surface.setNamedInput("suboutput", MTLX_StSf_Node, "out")
 
@@ -296,11 +314,16 @@ def nodeCreation(renderer, goal, file_data):
         MTLX_UV_Attrib.setColor(col)
 
         MTLX_UV_Place = goalNode.createNode("mtlxplace2d", "UVControl")
+        MTLX_UV_Place.parm("scalex").setExpression('ch("../uvscalex")')
+        MTLX_UV_Place.parm("scaley").setExpression('ch("../uvscaley")')
+        MTLX_UV_Place.parm("offsetx").setExpression('ch("../uvoffsetx")')
+        MTLX_UV_Place.parm("offsety").setExpression('ch("../uvoffsety")')
+        MTLX_UV_Place.parm("rotate").setExpression('ch("../uvrotate")')
         MTLX_UV_Place.setColor(col)
         MTLX_UV_Place.setNamedInput("texcoord", MTLX_UV_Attrib, "result")
 
         MTLX_disp = goalNode.createNode("mtlxdisplacement")
-        MTLX_disp.parm("scale").set(0.05)
+        MTLX_disp.parm("scale").setExpression('ch("../displacement")')
         subnet_output_disp.setNamedInput("suboutput", MTLX_disp, "out")
         
         MTLX_remap_disp = goalNode.createNode("mtlxremap")
