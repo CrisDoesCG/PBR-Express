@@ -173,7 +173,7 @@ def debugMetadata(data):
 ## System for promting the user with a window in which the desired render engine can be selected  
 def renderHandler(renderer_names):
     
-    render_selection = hou.ui.selectFromList(renderer_names, exclusive=True, title=("Render Handler"), message=("message"), column_header="Renderers", width=500, height=200)
+    render_selection = hou.ui.selectFromList(renderer_names, exclusive=True, title=("Render Handler"), message=("For which renderer should the material be created?"), column_header="Renderers", width=500, height=200)
     
     if len(render_selection) == 0:
         hou.ui.displayMessage("Script has been canceled.")
