@@ -56,7 +56,7 @@ Every texture providing website has its own naming convention. Some call it albe
 <details>
 <summary><strong> Expandable from the ground up </strong></summary>
 <br>
-The script was created with easy expansion in mind. New texture types are straightforward to expand and with a bit of Python knowledge even support for new render engines can be added without waiting for this repo to be updated. See "Contributing" for more infos.
+The script was created with easy expansion in mind. New texture types are straightforward to add and with a bit of Python knowledge even support for new render engines can be added without waiting for this repo to be updated. See "Contributing" for more infos.
 <br><br>
 </details> 
 
