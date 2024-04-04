@@ -1,22 +1,6 @@
 # 🚂 PBR-Express
 > PBR-Express is a handy tool for Houdini that makes it quick and easy to create PBR materials. Just toss in your texture files and the tool will instantly set up a material for your preferred renderer. It's all about saving time on the boring stuff, so VFX artists can focus more on getting creative with their materials. Enjoy a smooth process that turns textures into usable materials in Houdini!
 
-## 📖 Table of Contents
-
-   - [Showcase](#-showcase)
-   - [Key-Features](#-key-features)
-   - [Requirements](#-requirements)
-   - [Installation](#-installation)
-   - [Manual](#-manual)
-      - [How it works](#how-it-works)
-      - [How to use](#how-to-use)
-      - [Tips](#tips)
-   - [Future-Plans](#-future-plans)
-   - [Support](#-support)
-      - [Buy Me a Coffee](#buy-me-a-coffee)
-      - [Connect on Social Media](#connect-on-social-media)
-      - [Share Your Experience](#share-your-experience)
-
 ## 🎬 Showcase
    
 ## 🔑 Key-Features
