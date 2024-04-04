@@ -121,6 +121,7 @@ The tool uses the data from these _two main variables_ to match each input file 
 - ~~The option to create multiple sets of materials once the script is active~~
 - Some intuitive solutions for dealing with color spaces
 - ~~Make adding new naming variations easier~~ 
+- Adding a feature for mixing multiple selected PBR textures?
 
 
 ## ❤️ Support
