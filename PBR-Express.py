@@ -84,17 +84,27 @@ def textureFinder(inputFiles):
         ### Create metadata    
         fullname = file.split("/")[-1]
         name, extension = os.path.splitext(fullname)
+        
+        ### For UDIMs, delete from name but keep in path
+        UDIM_namings = [".<UDIM>", "_<UDIM>", ".$F", "_$F"]
+        
+        for n in UDIM_namings:
+            if n in name:
+                name = name.replace(n,"")   
+
+        if "$F" in file:
+            file = file.replace("$F","<UDIM>")                                          
+
+        ### For namings with resolutions at the end
         if name.split("_")[-1] in resolutions:      # If the last word after the sepparator is a resolution from the list above, fall back to the 2nd word
             ending = ending = name.split("_")[-2]
         else:
             ending = name.split("_")[-1]
         textureType = None           
-                
+
         metadata = (file,name,ending,textureType)                
         metadata_list.append(metadata) 
-        
         file_endings.append(ending)
-
 
     ### Error checking for invalid file types or ending duplicates
     ### Count occurrences of each element
