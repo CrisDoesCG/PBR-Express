@@ -40,6 +40,13 @@ See "Tips".
 </details> 
 
 <details>
+<summary><strong> Support for UDIMs </strong></summary>
+<br>
+See "How to use".
+<br><br>
+</details> 
+
+<details>
 <summary><strong> Unknown texture handling </strong></summary>
 <br>
 The script currently supports albedo(diffuse), ao, height(displacement), normal, roughness, metallic, alpha(opacity) and emission maps. If the script does not recognize a certain type of texture, it will ask the user if the texture should be loaded into the material anyway or be forgotten.  
@@ -96,6 +103,10 @@ The tool uses the data from these _two main variables_ to match each input file 
    - Some examples of file names that won't work with the script as of now: `sample_texture_4k-color.exr` , `color_websiteName.exr`
    - If there are two or multiple files that are of the same texture type, the script will throw an error. 
    - DO NOT use any **semicolons that have a space before and after** them in your file paths. `C:/Desktop/my ; folder/texture.png` will break the script. Also, who names their folders like that? 
+
+   Additionally, you can load in UDIM textures by checking the `Show sequences as one entry` toggle on the bottom of the Houdini file explorer and choosing the files. You can have it set to `Frame Range` OR `UDIM`, but the tool will automatically convert the numbering to "&lt;UDIM&gt;". The UDIM number can be separated from the rest of the name by a `.` or a `_`.
+
+   
 4. Choose the preferred renderer. 
 5. Choose the material library in which the material will be created. If this dialog does not come up, that means that the script recognized your open network tab as a valid VOP network and will drop the materials there. 
 > ***Some known limitations:*** If you have an open non-material VOP window open (for example an Attribute VOP node), the script will error out when trying to make the material, since no material nodes can be created there. Also, if one tries to run the script inside a (VOP) subnetwork, it will also error out, even if the subnetwork is a valid material VOP.  
@@ -122,6 +133,7 @@ The tool uses the data from these _two main variables_ to match each input file 
 - Some intuitive solutions for dealing with color spaces
 - ~~Make adding new naming variations easier~~ 
 - Adding a feature for mixing multiple selected PBR textures?
+- ~~Adding UDIM support~~
 
 
 ## ❤️ Support
