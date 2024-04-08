@@ -104,7 +104,7 @@ The tool uses the data from these _two main variables_ to match each input file 
    - If there are two or multiple files that are of the same texture type, the script will throw an error. 
    - DO NOT use any **semicolons that have a space before and after** them in your file paths. `C:/Desktop/my ; folder/texture.png` will break the script. Also, who names their folders like that? 
 
-   Additionally, you can load in UDIM textures by checking the `Show sequences as one entry` toggle on the bottom of the Houdini file explorer and choosing the files. You can have it set to `Frame Range` OR `UDIM`, but the tool will automatically convert the numbering to "&lt;UDIM&gt;". The UDIM number can be separated from the rest of the name by a `.` or a `_`.
+   Additionally, you can load in UDIM textures by checking the `Show sequences as one entry` toggle on the bottom of the Houdini file explorer and choosing the files. You can have it set to `Frame Range` OR `UDIM`, but the tool will automatically convert the numbering to "&lt;UDIM&gt;".
 
    
 4. Choose the preferred renderer. 
