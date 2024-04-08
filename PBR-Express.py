@@ -86,7 +86,7 @@ def textureFinder(inputFiles):
         name, extension = os.path.splitext(fullname)
         
         ### For UDIMs, delete from name but keep in path
-        UDIM_namings = ["<UDIM>", ".<UDIM>", "_<UDIM>", "-<UDIM>", ".$F", "_$F", "-$F"]
+        UDIM_namings = ["<UDIM>", ".<UDIM>", "_<UDIM>", "-<UDIM>", "F", ".$F", "_$F", "-$F"]
         
         for n in UDIM_namings:
             if n in name:
