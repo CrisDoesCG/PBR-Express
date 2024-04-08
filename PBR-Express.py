@@ -16,7 +16,7 @@ supported_renderers = [
 "Mantra",
 ]
 
-## List of all possible
+## List of all possible naming conventions
 supportedTextures_data = {
     "DIFFUSE":      ['diffuse', 'Diffuse', 'diff', 'Diff', 'Albedo', 'albedo', 'color', 'Color', 'BaseColor', 'basecolor'],     
     "AO":           ['ambientOcclusion', 'AmbientOcclusion', 'AO', 'ao'],           
@@ -86,7 +86,7 @@ def textureFinder(inputFiles):
         name, extension = os.path.splitext(fullname)
         
         ### For UDIMs, delete from name but keep in path
-        UDIM_namings = [".<UDIM>", "_<UDIM>", ".$F", "_$F"]
+        UDIM_namings = ["<UDIM>", ".<UDIM>", "_<UDIM>", "-<UDIM>", ".$F", "_$F", "-$F"]
         
         for n in UDIM_namings:
             if n in name:
