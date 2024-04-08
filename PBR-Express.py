@@ -276,7 +276,7 @@ def nodeCreation(renderer, goal, file_data):
         parameters = goalNode.parmTemplateGroup()
 
         newParm_hidingFolder = hou.FolderParmTemplate("mtlxBuilder","MaterialX Builder",folder_type=hou.folderType.Collapsible)
-        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1)
+        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1, default_value=["MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput"])
 
         newParm_hidingFolder.addParmTemplate(newParam_tabMenu)
 
@@ -284,7 +284,7 @@ def nodeCreation(renderer, goal, file_data):
         newParam_uvOffset = hou.FloatParmTemplate("uvoffset", "UV Offset", 2, default_value=(0,0))
         newParam_uvRotate = hou.FloatParmTemplate("uvrotate", "UV Rotate", 1)
         newParam_separator = hou.SeparatorParmTemplate("separator")
-        newParam_displacement = hou.FloatParmTemplate("displacement", "Displacement", 1)
+        newParam_displacement = hou.FloatParmTemplate("displacement", "Displacement", 1, default_value=(0.05,0))
 
         parameters.append(newParm_hidingFolder)
         parameters.append(newParam_uvScale)
@@ -293,9 +293,7 @@ def nodeCreation(renderer, goal, file_data):
         parameters.append(newParam_separator)
         parameters.append(newParam_displacement)
         
-        goalNode.setParmTemplateGroup(parameters) 
-        goalNode.parm("tabmenumask").set("MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput")     
-        goalNode.parm("displacement").set(0.05)
+        goalNode.setParmTemplateGroup(parameters)   
 
         ### Destroy pre-made nodes
         children = goalNode.allSubChildren()
@@ -476,7 +474,7 @@ else:
 
     quick_data = metadataAssign(file_data)                  
     
-    # debugMetadata(quick_data)
+    debugMetadata(quick_data)
     
     print("[INFO] Quick setup has been initiated.")
     nodeCreation(renderHandler(supported_renderers),goalSelection(),quick_data)    
