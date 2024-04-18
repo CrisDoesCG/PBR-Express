@@ -471,11 +471,17 @@ if kwargs["shiftclick"] or kwargs["ctrlclick"]:
     renderer = renderHandler(supported_renderers)
     destination = goalSelection()
 
-    for set in input_texture_sets:
-        set_name = os.path.splitext(os.path.basename(set.split(" ; ")[0]))[0].rsplit('_', 1)[0]
-        file_data = textureFinder(set)
-        quick_data = metadataAssign(file_data)
-        nodeCreation(renderer,destination,quick_data)   
+    # Iterating over the texture sets and creating all of the nodes
+    with hou.InterruptableOperation(
+        "Creating textures...", "Executing PBR-Express...", open_interrupt_dialog=True) as operation:
+        for index, set in enumerate(input_texture_sets):
+            set_name = os.path.splitext(os.path.basename(set.split(" ; ")[0]))[0].rsplit('_', 1)[0]
+            file_data = textureFinder(set)
+            quick_data = metadataAssign(file_data)
+            nodeCreation(renderer,destination,quick_data)  
+            
+            percent = (float(index) / float(len(input_texture_sets)))
+            operation.updateLongProgress(percent)             
      
     print("\n[INFO] Ending script.")
     print("------------------------------------------------")      
