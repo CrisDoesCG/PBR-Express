@@ -194,47 +194,61 @@ def renderHandler(renderer_names):
     print(f"[SUCCESS] A valid renderer has been selected: {render_selection_name}")          
     return render_selection_name
 
-    
 
-## System for creating finding active pane and use that as goal for the created nodes if it is a valid vop network, else let the user input a destination for the nodes
+
+## System for manually setting the destination of the material(s)
+def manualGoalSelection():    
+    goalPath = hou.ui.selectNode(title = "Input destination for material") 
+
+    if goalPath is None:
+        print("[INFO] Script has been canceled.")
+        hou.ui.displayMessage("Script has been canceled.")
+        exit() 
+
+    goalType = hou.node(goalPath).childTypeCategory().name()
+
+    if goalType != "Vop":
+        print(f"[ERROR] The selected destination is not valid for material nodes: {goalPath}") 
+        hou.ui.displayMessage("The selected node destination can't be used for materials, check the console for more info.", title=("BZZ... WRONG"))
+        exit()
+
+    print(f"[SUCCESS] A valid material path was manually selected: {goalPath}")
+    return goalPath   
+
+
+
+## System for finding active pane and use that as goal for the created nodes if it is a valid vop network, else let the user input a destination for the nodes and use manualGoalSelection()
 def goalSelection():
-    ### KNOWN BUG: IF YOU ARE INSIDE A SUBNETWORK THE SCRIPT ERRORS OUT!! 
-    ### KNOWN BUG: IF YOU ARE INSIDE A NORMAL VOP NETWORK THE SCRIPT ERRORS OUT!! 
     editors = [pane for pane in hou.ui.paneTabs() if isinstance(pane, hou.NetworkEditor) and pane.isCurrentTab()]
 
     currentPane = editors[-1].currentNode()
 
-    currentPane_path = currentPane.path() 
-    currentPane_type = currentPane.childTypeCategory().name()
+    currentPane_path = currentPane.path()
+    currentPane_parent_path = currentPane.parent().path()
 
-    if currentPane_type == "Vop":
-        currentPane_parent = currentPane.parent()
+    errorCount = 0
 
-        if currentPane_parent.childTypeCategory().name() == "Vop":
+    try:
+        dummy1 = hou.node(currentPane_parent_path).createNode("usdprimvarreader")  
+        dummy1.destroy()
+    except hou.OperationFailed:
+        errorCount+=1
+        try:
+            dummy2 = hou.node(currentPane_path).createNode("usdprimvarreader")  
+            dummy2.destroy()
+        except hou.OperationFailed:
+            errorCount+=1 
+    
+    if errorCount == 0:
+        print(f"[SUCCESS] A valid material path was automatically detected: {currentPane_parent_path}")
+        return currentPane_parent_path
+    elif errorCount == 1: 
+        print(f"[SUCCESS] A valid material path was automatically detected: {currentPane_path}")
+        return currentPane_path
+    elif errorCount == 2: 
+        print("[INFO] A valid material path couldn't be detected, falling back to manual selection.")
+        return manualGoalSelection() 
 
-            goalPath = currentPane_parent.path()
-
-        else:
-            goalPath = currentPane_path
-        print(f"[SUCCESS] A valid destination for the nodes has been selected: {goalPath}") 
-
-    else:
-        goalPath = hou.ui.selectNode(title = "Input destination for material") 
-
-        if len(goalPath) is None:
-            print("[INFO] Script has been canceled.")
-            hou.ui.displayMessage("Script has been canceled.")
-            exit() 
-
-        goalType = hou.node(goalPath).childTypeCategory().name()
-
-        if goalType != "Vop":
-            print(f"[ERROR] The selected destination is not valid for material nodes: {goalPath}") 
-            hou.ui.displayMessage("The selected node destination can't be used for materials, check the console for more info.", title=("BZZ... WRONG"))
-            exit()
-
-    return goalPath
-        
 
 
 ## System for the actual node creation 
@@ -455,14 +469,15 @@ if kwargs["shiftclick"] or kwargs["ctrlclick"]:
             input_texture_sets.append(input_files)
 
     renderer = renderHandler(supported_renderers)
+    destination = goalSelection()
 
     for set in input_texture_sets:
         set_name = os.path.splitext(os.path.basename(set.split(" ; ")[0]))[0].rsplit('_', 1)[0]
         file_data = textureFinder(set)
         quick_data = metadataAssign(file_data)
-        nodeCreation(renderer,goalSelection(),quick_data)   
+        nodeCreation(renderer,destination,quick_data)   
      
-    print("\n[INFO] Ending script")
+    print("\n[INFO] Ending script.")
     print("------------------------------------------------")      
 
 else:
@@ -472,13 +487,15 @@ else:
 
     file_data = textureFinder(input_files)
 
-    quick_data = metadataAssign(file_data)                  
+    quick_data = metadataAssign(file_data)  
+
+    destination = goalSelection()                
     
-    debugMetadata(quick_data)
+    # debugMetadata(quick_data)
     
     print("[INFO] Quick setup has been initiated.")
-    nodeCreation(renderHandler(supported_renderers),goalSelection(),quick_data)    
-    print("\n[INFO] Ending script")
+    nodeCreation(renderHandler(supported_renderers),destination,quick_data)    
+    print("\n[INFO] Ending script.")
     print("------------------------------------------------")
 
 
