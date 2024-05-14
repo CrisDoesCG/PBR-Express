@@ -3,7 +3,7 @@
 # Created by Cristian Cornesteanu
 # Written and tested in Houdini Indie 20.0.625
 
-# Last update 3. May 2024
+# Last update 15. May 2024
 
 
 import hou
@@ -13,7 +13,7 @@ import os
 
 ## List of supported renderers    
 supported_renderers = [
-"Karma",
+"MaterialX",
 "Mantra",
 ]
 
@@ -281,6 +281,8 @@ def techChecker(inputFiles,mode):
         metadata_list_checked.append(metadata)                     
         return list(set(metadata_list_checked)), set(list(materialNames)), stats_fileProcessed, stats_invalidFiles, stats_UDIMdetected, list(set(stats_redirectedTextures)), stats_hopelessTextures      
     
+
+
 ## System for the actual node creation 
 def nodeCreation(renderer, goal, file_data, set):
 
@@ -289,18 +291,45 @@ def nodeCreation(renderer, goal, file_data, set):
     col = hou.Color((0.98, 0.275, 0.275))
     detected_texture_types = []
     
-    if renderer == "Karma":
+    if renderer == "MaterialX":
         ### Create subnet with all parameters
         goalNode = goalNode.createNode("subnet",set)
         goalNode.moveToGoodPosition()
+        goalNode.setMaterialFlag(True)                  
 
         parameters = goalNode.parmTemplateGroup()
 
+        ### Parameters for MTLX tab filtering and solaris compatibility
         newParm_hidingFolder = hou.FolderParmTemplate("mtlxBuilder","MaterialX Builder",folder_type=hou.folderType.Collapsible)
-        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1, default_value=["karma USD ^mtlxramp* ^hmtlxramp* ^hmtlxcubicramp* MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput"])
+        control_parm_pt = hou.IntParmTemplate('inherit_ctrl','Inherit from Class', 
+                            num_components=1, default_value=(2,), 
+                            menu_items=(['0','1','2']),
+                            menu_labels=(['Never','Always','Material Flag']))
+       
+        
+        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1, default_value=["MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput"])
+        class_path_pt = hou.properties.parmTemplate('vopui', 'shader_referencetype')
+        class_path_pt.setLabel('Class Arc')
+        class_path_pt.setDefaultExpressionLanguage((hou.scriptLanguage.Python,))
+        class_path_pt.setDefaultExpression(('''n = hou.pwd()
+n_hasFlag = n.isMaterialFlagSet()
+i = n.evalParm('inherit_ctrl')
+r = 'none'
+if i == 1 or (n_hasFlag and i == 2):
+    r = 'inherit'
+return r'''
+,))   
+
+        ref_type_pt = hou.properties.parmTemplate('vopui', 'shader_baseprimpath')
+        ref_type_pt.setDefaultValue(['/__class_mtl__/`$OS`'])
+        ref_type_pt.setLabel('Class Prim Path')               
 
         newParm_hidingFolder.addParmTemplate(newParam_tabMenu)
+        newParm_hidingFolder.addParmTemplate(control_parm_pt)  
+        newParm_hidingFolder.addParmTemplate(class_path_pt)    
+        newParm_hidingFolder.addParmTemplate(ref_type_pt)             
 
+        ### Parameters for texture control
         newParam_uvScale = hou.FloatParmTemplate("uvscale", "UV Scale", 2, default_value=(1,1))
         newParam_uvOffset = hou.FloatParmTemplate("uvoffset", "UV Offset", 2, default_value=(0,0))
         newParam_uvRotate = hou.FloatParmTemplate("uvrotate", "UV Rotate", 1)
@@ -314,7 +343,7 @@ def nodeCreation(renderer, goal, file_data, set):
         parameters.append(newParam_separator)
         parameters.append(newParam_displacement)
         
-        goalNode.setParmTemplateGroup(parameters)   
+        goalNode.setParmTemplateGroup(parameters)     
 
         ### Destroy pre-made nodes
         children = goalNode.allSubChildren()
@@ -507,19 +536,26 @@ for i in input:
         if texture_set not in materialData:
             materialData[texture_set] = []
         materialData[texture_set].append(metadata) 
-                
-    for materialName, materialFiles in materialData.items():
-        nodeCreation("Karma",goal,materialFiles,materialName)  
+
+    numOfMaterials = len(materialData)
+    with hou.InterruptableOperation(
+        "Creating textures...", "Executing PBR-Express...", open_interrupt_dialog=True) as operation:                
+        for index, (materialName, materialFiles) in enumerate(materialData.items()):
+            nodeCreation("MaterialX",goal,materialFiles,materialName)  
+
+            percent = (float(index) / float(numOfMaterials))
+            operation.updateLongProgress(percent)                       
+
 
         ## FOR DEBUGGING
-        print(f"\n[DEBUG] Material: {materialName}")           
-        for metadata in materialFiles:
-            file_path,file_name,texture_type,texture_set,file_extension = metadata
-            print(f"\n\t[DEBUG] File Path: {file_path}")
-            print(f"\t[DEBUG] File Name: {file_name}")
-            print(f"\t[DEBUG] File Extension: {file_extension}") 
-            print(f"\t[DEBUG] Texture Type: {texture_type}")
-            print(f"\t[DEBUG] Texture Set: {texture_set}\n")            
+        # print(f"\n[DEBUG] Material: {materialName}")           
+        # for metadata in materialFiles:
+        #     file_path,file_name,texture_type,texture_set,file_extension = metadata
+        #     print(f"\n\t[DEBUG] File Path: {file_path}")
+        #     print(f"\t[DEBUG] File Name: {file_name}")
+        #     print(f"\t[DEBUG] File Extension: {file_extension}") 
+        #     print(f"\t[DEBUG] Texture Type: {texture_type}")
+        #     print(f"\t[DEBUG] Texture Set: {texture_set}\n")            
   
 
 
