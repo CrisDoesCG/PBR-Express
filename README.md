@@ -21,7 +21,7 @@ No need to download anything, just copy and paste the raw code from PBR-Express.
 <details>
 <summary><strong> Texture-naming flexibility </strong></summary>
 <br>
-Supports any texture sets that have the texture type written at the end of the file name and it is separated by an underscore: e.g. `sample_texture_4k_displacement.exr`. Additionally, the resolution can be at the end of the name like in `sample_texture_displacement_4k.exr`. See "How to use" for more infos.
+Supports any texture sets that have the texture type written somewhere in the name. See "How to use" for more infos.
 <br><br>
 </details> 
 
@@ -49,7 +49,7 @@ See "How to use".
 <details>
 <summary><strong> Unknown texture handling </strong></summary>
 <br>
-The script currently supports albedo(diffuse), ao, height(displacement), normal, roughness, metallic, alpha(opacity) and emission maps. If the script does not recognize a certain type of texture, it will ask the user if the texture should be loaded into the material anyway or be forgotten.  
+The script currently supports albedo(diffuse), ao, height(displacement), normal, roughness, metallic, alpha(opacity), emission, refraction(translucency), and SSS maps. If the script does not recognize a certain type of texture, it will create the image node anyway, but not connect it to anything.
 <br><br>
 </details> 
 
@@ -95,44 +95,37 @@ The tool uses the data from these _two main variables_ to match each input file 
 
    `supported_renderers`: This is a simple list of all of the supported renderers.
 
-   `supportedTextures_data`: This variable holds all of the supported texture types (METALLIC) with every variation of name it can have. (['Metallic', 'metallic', 'Metalness'])
+   `supportedTextures_data`: This variable holds all of the supported texture types `METALLIC` with every variation of name it can have. `['metallic', 'metalness']` Can be both upper and lowercase, the script will check both anyway.
 
 ### How to use
-1. Press the shelf tool and you will be prompted with a file-chooser dialog where you can select your PBR textures.
-2. Choose your preferred textures. The files have to **end** with the texture type OR have it written **after** the resolution; everything has to be separated by an **underscore**: e.g. `websiteName_4k_displacement.exr` or `sample_texture_displacement_4k.exr`.
-   - Some examples of file names that won't work with the script as of now: `sample_texture_4k-color.exr` , `color_websiteName.exr`
-   - If there are two or multiple files that are of the same texture type, the script will throw an error. 
-   - DO NOT use any **semicolons that have a space before and after** them in your file paths. `C:/Desktop/my ; folder/texture.png` will break the script. Also, who names their folders like that? 
-
-   Additionally, you can load in UDIM textures by checking the `Show sequences as one entry` toggle on the bottom of the Houdini file explorer and choosing the files. You can have it set to `Frame Range` OR `UDIM`, but the tool will automatically convert the numbering to "&lt;UDIM&gt;".
-
-   
+1. Press the shelf tool and you will be prompted with a menu. You can now choose if you want to select your texture files normally or if you want to select one or multiple folders. This can be helpful if you have textures for multiple materials all in one directory. The script will try to match the files by name while also going through subfolders, so use caution when using on a big texture library. 
+2. Choose your preferred textures. The files need to have the texture type (`albedo`, `normal`, etc.) somewhere in the file name. If your files don't get recognized, have a look at `supportedTextures_data` and see if the naming is in the database.
+Additionally, you can load in UDIM textures by checking the `Show sequences as one entry` toggle on the bottom of the Houdini file explorer and choosing the files. You can have it set to `Frame Range` OR `UDIM`, but the tool will automatically convert the numbering to "&lt;UDIM&gt;". This only works when using the "File" import mode. The "Folder" importer will try to recognize UDIM sequences and import them accordingly, no need for extra user input. 
 4. Choose the preferred renderer. 
 5. Choose the material library in which the material will be created. If this dialog does not come up, that means that the script recognized your open network tab as a valid VOP network and will drop the materials there. 
 
 
 ### Tips
-- Use `CTRL` or `SHIFT` on the shelf tool to activate "Bulk Quick Setup". You can now input multiple texture sets. Just press "Accept" after each set and you will be prompted with the same window again. Upon pressing "Cancel", the materials will be created.
 - You can save yourself a click if you have already a valid material network open as your active node network. The script will assume that that is where you want your materials to be created and won't ask for a path. Also, if you have a material network selected, it will use that as destination for the new materials.
 - The script writes logs to the console for every major action it takes. In the case of troubleshooting, it might be worth having a look.
-- For more troubleshooting, one could uncomment the function `debugMetadata()`, which is located at the end of the script to get the metadata for each file printed to the console. This would be an example print: 
+- For more troubleshooting, one could uncomment the lines starting with `[DEBUG]`, which are mostly located at the end of the script to get the metadata for each file printed to the console. This would be an example print: 
 
 ```
-[DEBUG] Metadata of each selected file:
-[DEBUG] Path: D:/Nextcloud/Textures/Bricks/1/TexturesCom_Bricks_Rh_2x2_1K_albedo.tif
-[DEBUG] File Name: TexturesCom_Bricks_Rh_2x2_1K_albedo
-[DEBUG] File Ending: albedo
-[DEBUG] File Type: DIFFUSE
+   [DEBUG] File Path: D:/Nextcloud/Textures/Clay/TexturesCom_Terracotta_Plain_1K_albedo.tif
+   [DEBUG] File Name: TexturesCom_Terracotta_Plain_1K_albedo
+   [DEBUG] File Extension: tif
+   [DEBUG] Texture Type: DIFFUSE
+   [DEBUG] Texture Set: TexturesCom_Terracotta_Plain_1K
 ```
 
 ## 🔮 Future Plans
 - Adding support for other render engines like Vray, Arnold, Redshift, ...
-- Adding support for more texture types like ~~emission~~, translucency, sss, ...
-- Adding support for more types of texture names (e.g. file names that are separated by `-`)
+- Adding support for more texture types like ~~emission~~, translucency, ~~refraction~~, ~~sss~~, ...
+- ~~Adding support for more types of texture names (e.g. file names that are separated by `-`)~~
 - ~~The option to create multiple sets of materials once the script is active~~
 - Some intuitive solutions for dealing with color spaces
 - ~~Make adding new naming variations easier~~ 
-- Adding a feature for mixing multiple selected PBR textures?
+- ~~Adding a feature for mixing multiple selected PBR textures~~
 - ~~Adding UDIM support~~
 
 

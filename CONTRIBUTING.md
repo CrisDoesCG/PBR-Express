@@ -15,12 +15,12 @@ I don't have access to every single texture providing website (nor the patience 
    1. Add the name of the texture type inside `supportedTextures_data`.
    2. Add your new naming variations following the same conventions as the other texture types above.
    3. Now you need to make the actual code for the node creation inside `def nodeCreation()`. Again it's best to look at how the other texture nodes are being created and connected to other nodes. The most important variables will be:
-      - set_name: The name of the texture set, e.g. For a file named `myTextures_4k_normal.png`, the set_name would be `myTextures`.
+      - set: The name of the texture set, e.g. For a file named `myTextures_4k_normal.png`, the set_name would be `myTextures_4k`.
       - goalNode: This is the network where the nodes will be created.
       - file_data: This is a variable that holds the data of each selected file. Things like the path to the file, the file name, the file extension and the recognized texture type. The data would first need to be unpacked, but again, it makes sense to look at how it has been done for the other renderers. I normally did it like this:
       ```
         for metadata in file_data:
-            file, name, ending, textureType = metadata      
+            file_path,file_name,texture_type,texture_set,file_extension = metadata    
       ```
 
 ## Adding render engines

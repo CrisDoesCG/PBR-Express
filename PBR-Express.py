@@ -3,6 +3,7 @@
 # Created by Cristian Cornesteanu
 # Written and tested in Houdini Indie 20.0.625
 
+# Last update 22. May 2024
 
 
 import hou
@@ -12,20 +13,22 @@ import os
 
 ## List of supported renderers    
 supported_renderers = [
-"Karma",
+"MaterialX",
 "Mantra",
 ]
 
-## List of all possible naming conventions
+## List of all possible naming conventions, will check upper case and lower case
 supportedTextures_data = {
-    "DIFFUSE":      ['diffuse', 'Diffuse', 'diff', 'Diff', 'Albedo', 'albedo', 'color', 'Color', 'BaseColor', 'basecolor'],     
-    "AO":           ['ambientOcclusion', 'AmbientOcclusion', 'AO', 'ao'],           
-    "DISP":         ['disp', 'Displacement', 'Height', 'height'],        
-    "NORMAL":       ['Normal', 'normal', 'opengl', 'dx', 'NormalDX', 'normal-ogl', 'nor'],      
-    "ROUGH":        ['roughness', 'Roughness', 'rough'],        
-    "METALLIC":     ['Metallic', 'metallic', 'Metalness'],    
-    "OPACITY":      ['opacity', 'alpha', 'Opacity'],     
-    "EMISSION":     ['Emission', 'emission', 'emissive'],     
+    "DIFFUSE":      ['diffuse', 'diff', 'albedo', 'color', 'colour', 'basecolor', 'basecolour'],     
+    "AO":           ['ambientocclusion', 'ao', 'occlusion', 'occ'],           
+    "DISP":         ['disp', 'height', 'bump'],        
+    "NORMAL":       ['normal', 'opengl', 'dx', 'normaldx', 'normal-ogl', 'nor'],      
+    "ROUGH":        ['roughness', 'rough'],        
+    "METALLIC":     ['metallic', 'metalness'],    
+    "OPACITY":      ['opacity', 'alpha'],     
+    "EMISSION":     ['emission', 'emissive'],   
+    "REFRACTION":   ['refrac', 'refraction'],
+    "SSS":          ['sss', 'subsurface', 'scattering'],  
 }
 
 ## Remove duplicates from each list
@@ -33,168 +36,41 @@ for key, values in supportedTextures_data.items():
     supportedTextures_data[key] = list(set(values))
 
 
-
-
-
 #   ---DEFINITIONS---
-## System for prompting the user with a file chooser dialog
-def getTextureSet():
-    userInput = hou.ui.selectFile(title=("Choose one of the textures or input the folder path."), file_type=hou.fileType.Image, multiple_select=True, image_chooser=True)  
-    return userInput
-
-
-
-## System for converting this long string into a usable list to be used later
+## System condensing this long string into a usable list 
 def validFileTypes():
 
-    valid_file_types = "*.pic, *.pic.Z, *.picZ, *.pic.gz, *.picgz, *.rat, *.tbf, *.dsm, *.picnc, *.piclc, *.rgb, *.rgba, *.sgi, *.tif, *.tif3, *.tif16, *.tif32, *.tiff, *.yuv, *.pix, *.als, *.cin, *.kdk, *.jpg, *.jpeg, *.exr, *.png, *.psd, *.psb, *.si, *.tga, *.vst, *.vtg, *.rla, *.rla16, *.rlb, *.rlb16, *.bmp, *.hdr, *.ptx, *.ptex, *.ies, *.dds, *.r16, *.r32, *.qtl"
-    valid_file_types_clean = valid_file_types.replace("*","")
+    valid_file_types = "*.pic, *.picZ, *.picgz, *.rat, *.tbf, *.dsm, *.picnc, *.piclc, *.rgb, *.rgba, *.sgi, *.tif, *.tif3, *.tif16, *.tif32, *.tiff, *.yuv, *.pix, *.als, *.cin, *.kdk, *.jpg, *.jpeg, *.exr, *.png, *.psd, *.psb, *.si, *.tga, *.vst, *.vtg, *.rla, *.rla16, *.rlb, *.rlb16, *.bmp, *.hdr, *.ptx, *.ptex, *.ies, *.dds, *.r16, *.r32, *.qtl"
+    valid_file_types_clean = valid_file_types.replace("*","").replace(".","")
     valid_file_type_list = valid_file_types_clean.split(", ")
     
     return valid_file_type_list
-    
 
-
-## System for checking the files from the hou.ui.selectFile() function and creatig a metadata tuple for each file. Then combining all file tuples into a metadata_list
-def textureFinder(inputFiles):
-    
-    if len(inputFiles) == 0:
-        print("[INFO] Script has been canceled.")
-        hou.ui.displayMessage("Script has been canceled.")
-        exit()     
-        
-    input_files_clean = inputFiles.split(" ; ")
-        
-    metadata_list = []       
-    invalid_fileTypes = []        
-    file_endings = [] 
-    resolutions = ["1k", "1K", "2k", "2K", "4k", "4K", "6k", "6K", "8k", "8K", "16k", "16K", "32k", "32K"]
-
-    for file in input_files_clean:
-        ### Check if files types are supported
-        is_valid = False
-        validFileEndings = validFileTypes()
-        for element in validFileEndings:
-            if file.endswith(element):
-                is_valid = True
-                break
-        if not is_valid:
-            invalid_fileTypes.append(element)
-        
-        ### Create metadata    
-        fullname = file.split("/")[-1]
-        name, extension = os.path.splitext(fullname)
-        
-        ### For UDIMs, delete from name but keep in path
-        UDIM_namings = [".<UDIM>", "_<UDIM>", "-<UDIM>", "<UDIM>", ".$F", "_$F", "-$F", "$F"]
-        
-        for n in UDIM_namings:
-            if n in name:
-                name = name.replace(n,"")   
-
-        if "$F" in file:
-            file = file.replace("$F","<UDIM>")                                          
-
-        ### For namings with resolutions at the end
-        if name.split("_")[-1] in resolutions:      # If the last word after the sepparator is a resolution from the list above, fall back to the 2nd word
-            ending = ending = name.split("_")[-2]
-        else:
-            ending = name.split("_")[-1]
-        textureType = None           
-
-        metadata = (file,name,ending,textureType)                
-        metadata_list.append(metadata) 
-        file_endings.append(ending)
-
-    ### Error checking for invalid file types or ending duplicates
-    ### Count occurrences of each element
-    file_counts = {}
-    for ending in file_endings:
-        if ending in file_counts:
-            file_counts[ending] += 1
-        else:
-            file_counts[ending] = 1
-
-    ### Print duplicates
-    duplicates = {key: value for key, value in file_counts.items() if value > 1}
-    if duplicates:
-        print(f"[ERROR] Duplicate file endings detected.")
-        hou.ui.displayMessage("Seems like you have selected duplicate file endings (multiple normal maps for example).", title=("BZZ... WRONG"))
+## System for prompting the user with a folder chooser dialog 
+def getFolderInput():
+    userFolderInput = hou.ui.selectFile(title=("Choose the folder containing your materials."), file_type=hou.fileType.Directory, multiple_select=True)  
+    if len(userFolderInput) == 0:
+        print(f"[INFO] Script has been canceled.")        
         exit()
-            
-    if len(invalid_fileTypes) != 0:
-        print(f"[ERROR] Those files types are not supported image files: {invalid_fileTypes}")
-        print(f"[ERROR] List of supported image files: {str(validFileTypes())}")        
-        hou.ui.displayMessage("Seems like one of your files is not an image file, check the console for more info.", title=("BZZ... WRONG"))
-        exit()           
-
-    print("\n[SUCCESS] Input files seem valid.")                     
-    print("[SUCCESS] Metadata for each file was written.")        
-    return metadata_list            
-
-
-
-## System for cleaning up the data from the tuple created in textureFinder()
-def metadataAssign(old_data):
-
-    quick_list = []
-    unique_type = []
-
-    for metadata in old_data:
-        file, name, ending, textureType = metadata
-        for texture_type, aliases in supportedTextures_data.items():
-            if ending in aliases:
-                textureType = texture_type
-                break 
-
-        metadata = (file,name,ending,textureType)
-                
-        quick_list.append(metadata)  
-
-    ### Check if there are multiple files of the same textureType   
-    for file in quick_list:
-        t = file[3]
-        if t == None:       # Checking so we can have multiple files that are of the textureType "None"
-            pass
-        else:            
-            if t in unique_type:
-                print(f"[ERROR] Multiple files of the same textureType detected: {t}")
-                hou.ui.displayMessage(f"Seems like you have selected multiple files of the same textureType, check the console for more info", title=("BZZ... WRONG"))        
-                exit()
-            else:
-                unique_type.append(t)            
-
-    return quick_list
-
-
-
-## System for printing out the tuple that was created in textureFinder(), this is only used for debugging
-def debugMetadata(data):
-    print("[DEBUG] Metadata of each selected file:")
-    for metadata in data:
-        file, name, ending, textureType = metadata  
-        print(f"\n\t[DEBUG] Path: {file}")
-        print(f"\t[DEBUG] File Name: {name}")
-        print(f"\t[DEBUG] File Ending: {ending}")
-        print(f"\t[DEBUG] Texture Type: {textureType}\n")   
-
-
-
-## System for promting the user with a window in which the desired render engine can be selected  
-def renderHandler(renderer_names):
-    
-    render_selection = hou.ui.selectFromList(renderer_names, exclusive=True, title=("Render Handler"), message=("For which renderer should the material be created?"), column_header="Renderers", width=500, height=200)
-    
-    if len(render_selection) == 0:
-        hou.ui.displayMessage("Script has been canceled.")
-        exit()        
+    if " ; " in userFolderInput:
+        userFolderInput = userFolderInput.split(" ; ")
     else:
-        render_selection_name = renderer_names[render_selection[0]]
-    
-    print(f"[SUCCESS] A valid renderer has been selected: {render_selection_name}")          
-    return render_selection_name
+        userFolderInput = [userFolderInput]
 
+    return userFolderInput 
 
+## System for prompting the user with a file chooser dialog    
+def getFileInput():    
+    userFileInput = hou.ui.selectFile(title=("Choose the folder containing your materials."), file_type=hou.fileType.Image, multiple_select=True, image_chooser=True)
+    if len(userFileInput) == 0:
+        print(f"[INFO] Script has been canceled.")        
+        exit()    
+    if " ; " in userFileInput:
+        userFileInput = userFileInput.split(" ; ")
+    else:
+        userFileInput = [userFileInput]
+
+    return userFileInput 
 
 ## System for manually setting the destination of the material(s)
 def manualGoalSelection():    
@@ -214,8 +90,6 @@ def manualGoalSelection():
 
     print(f"[SUCCESS] A valid material path was manually selected: {goalPath}")
     return goalPath   
-
-
 
 ## System for finding active pane and use that as goal for the created nodes if it is a valid vop network, else let the user input a destination for the nodes and use manualGoalSelection()
 def goalSelection():
@@ -249,51 +123,213 @@ def goalSelection():
         print("[INFO] A valid material path couldn't be detected, falling back to manual selection.")
         return manualGoalSelection() 
 
+## System for promting the user with a window in which the desired render engine can be selected  
+def renderHandler(renderer_names):
+    
+    render_selection = hou.ui.selectFromList(renderer_names, exclusive=True, title=("Render Handler"), message=("For which renderer should the material be created?"), column_header="Renderers", width=500, height=200)
+    
+    if len(render_selection) == 0:
+        hou.ui.displayMessage("Script has been canceled.")
+        exit()        
+    else:
+        render_selection_name = renderer_names[render_selection[0]]
+    
+    print(f"[SUCCESS] A valid renderer has been selected: {render_selection_name}")          
+    return render_selection_name
 
+## System for tech-checking the files from the getFolderInput() or getFileInput() function and creatig a metadata tuple for each file. Then combining all file tuples into a metadata_list    
+def techChecker(inputFiles,mode): 
 
+    metadata_list = []
+    file_sets_list = []
+
+    stats_fileProcessed = []
+    stats_UDIMdetected = []
+    stats_redirectedTextures = []
+    stats_invalidFiles = []
+
+    invalid_extensions = []
+    invalid_textures = []
+
+    valid_endings = validFileTypes()    
+
+    read_files = []
+    read_root = "/"
+    invalid_symbols = [" ", "(", ")", "[", "]", "{", "}", "%", "^", "&", "*"]
+
+    if mode == "Folder":
+        for root, dirs, files in os.walk(inputFiles):         
+            for file in files:
+                read_files.append(file)
+            read_root = root
+
+    if mode == "File":
+        __temp_path = inputFiles[0]
+        read_root = __temp_path[:__temp_path.rfind("/")+1]
+        __temp_files = []
+        for file in inputFiles:
+            __temp_file = file.split('/')[-1]
+            __temp_files.append(__temp_file)
+
+        read_files = __temp_files
+
+    ### Check for every file in the folder if the ending is valid and if the texture type is being recognized, then create metadata tuple for each file. Then combining all file tuples into a metadata_list
+    for file in read_files:
+
+        index = read_files.index(file)
+
+        texture_type = None
+        texture_set = None
+
+        stats_fileProcessed.append(file + str(index))
+
+        file_path = read_root + file
+
+        ### file extension check, UDIM handling and file naming handling (invalid_symbols are replaced with "_" so Houdini can create the nodes with proper namings)
+        __temp_file_name, __temp_file_sep, file_extension = file.rpartition(".")     
+        file_name = __temp_file_name     
+
+        if file_extension not in valid_endings:
+            invalid_extensions.append(file)   
+            continue
+
+        else:     
+            if ".<UDIM>" in file or ".$F" in file:
+                file_name = __temp_file_name.replace(".<UDIM>","").replace(".$F","")             
+
+                file_path = file_path.replace(".$F",".<UDIM>")      
+
+                stats_UDIMdetected.append(file_name+"."+file_extension+"_"+str(index))               
+
+            if len(__temp_file_name.split(".")) > 1:
+                last_part = __temp_file_name.split(".")[-1]
+                if last_part.isdigit() and len(last_part) == 4 and last_part[0] == "1":
+                    file_name = __temp_file_name.replace("."+last_part, "")
+                    file_path = file_path.replace(last_part, "<UDIM>")
+
+                    stats_UDIMdetected.append(file_name+"."+file_extension+"_"+str(index))  
+
+        ### Invalid symbol handling
+        for symbol in invalid_symbols:
+            if symbol in file_name:
+                file_name.replace(symbol,"_")
+
+        ### Check what texture types the file matches 
+        matching = []
+        for key, values in supportedTextures_data.items():
+            for value in values:
+                if value in file_name.lower():
+                    texture_type = key
+                    ### Take longest matching texture type and remove that from the name
+                    matching.append(value)
+                    if len(matching) > 1:
+                        value = max(matching, key=len)
+                    
+                    ### Assign texture set
+                    start_index = file_name.lower().find(value)
+                    matching_substring = file_name[start_index:start_index + len(value)]
+                    texture_set = file_name.replace(matching_substring,"")
+                    
+        ### Formatting texture_set string nicely
+        if texture_type is not None:
+            texture_set.replace('--', '-').replace('__', '_')      
+            if texture_set.endswith("-") or texture_set.endswith("_"):
+                texture_set = texture_set[:-1]        
+                file_sets_list.append(texture_set)    
+        else:
+            invalid_textures.append(file_name+"."+file_extension)  
+
+        ### Houdini does not like long node names, this simplifies the name of the node if the file name is over 70 characters
+        if len(file_name) > 70:
+            file_name = texture_type                                             
+
+        metadata = (file_path,file_name,texture_type,texture_set,file_extension)
+        metadata_list.append(metadata)
+
+    stats_invalidFiles = invalid_textures, invalid_extensions
+
+    ### Making list so we remove duplicates (for UDIM creation mainly)
+    metadata_list = list(set(metadata_list)) 
+
+    metadata_list_checked = []
+    stats_hopelessTextures = []
+    materialNames = []
+
+    ### Redirecting lost textures 
+    file_sets_list = list(set(file_sets_list))
+
+    for m in metadata_list:
+        file_path,file_name,texture_type,texture_set,file_extension = m
+        # print(f"\n\t[DEBUG] File Path: {file_path}")
+        # print(f"\t[DEBUG] File Name: {file_name}")
+        # print(f"\t[DEBUG] File Extension: {file_extension}") 
+        # print(f"\t[DEBUG] Texture Type: {texture_type}")
+        # print(f"\t[DEBUG] Texture Set: {texture_set}")  
+
+        if texture_type is None and texture_set is None:
+            for tset in file_sets_list:
+                if tset in file_name:
+                    texture_set = tset
+                    stats_redirectedTextures.append(file_name+"."+file_extension)
+        if texture_type is None and texture_set is None:
+
+            stats_hopelessTextures.append(file_name+"."+file_extension)
+        else:    
+            materialNames.append(texture_set)
+            metadata = (file_path,file_name,texture_type,texture_set,file_extension)                    
+            metadata_list_checked.append(metadata)
+
+    # if valid is True:
+    metadata_list_checked.append(metadata)                     
+    return list(set(metadata_list_checked)), set(list(materialNames)), stats_fileProcessed, stats_invalidFiles, stats_UDIMdetected, list(set(stats_redirectedTextures)), stats_hopelessTextures      
+    
 ## System for the actual node creation 
-def nodeCreation(renderer, goal, file_data):
+def nodeCreation(renderer, goal, file_data, set):
 
-    ### Check for fauly data
-    faulty_data = []
-    faulty_entry = []
-
-    for metadata in file_data:
-        file, name, ending, textureType = metadata
-        if textureType == None:
-            faulty_data.append(file)
-            faulty_entry.append(metadata)
-
-    if len(file_data) == len(faulty_data):
-        print(f"[ERROR] All files not recognized:\n{faulty_data}")
-        hou.ui.displayMessage("Seems like none of the selected files could be matched to any predetermined or custom texture types. See console for info.")
-        exit()
-
-    if len(faulty_data) != 0:
-        print(f"[INFO] Some files can't be properly recognized:\n{faulty_data}")
-        selection = hou.ui.displayMessage("Seems like you selected some files could not be matched to any predetermined or custom texture types, should the texture nodes be created anyway? (See console for info)", buttons=("Create anyway", "Forget them"))
-
-        # Dont create image node for unrecognized texture types if user chooses so
-        if selection == 1:
-            file_data = [entry for entry in file_data if entry not in faulty_entry]
-
-    print(f"[SUCCESS] Starting node creation for texture set: '{set_name}'.") 
+    # print(f"[INFO] Starting node creation for texture set: '{set}'.") 
     goalNode = hou.node(goal)
     col = hou.Color((0.98, 0.275, 0.275))
     detected_texture_types = []
     
-    if renderer == "Karma":
+    if renderer == "MaterialX":
         ### Create subnet with all parameters
-        goalNode = goalNode.createNode("subnet",set_name)
+        goalNode = goalNode.createNode("subnet",set)
         goalNode.moveToGoodPosition()
+        goalNode.setMaterialFlag(True)                  
 
         parameters = goalNode.parmTemplateGroup()
 
+        ### Parameters for MTLX tab filtering and solaris compatibility
         newParm_hidingFolder = hou.FolderParmTemplate("mtlxBuilder","MaterialX Builder",folder_type=hou.folderType.Collapsible)
-        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1, default_value=["karma USD ^mtlxramp* ^hmtlxramp* ^hmtlxcubicramp* MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput"])
+        control_parm_pt = hou.IntParmTemplate('inherit_ctrl','Inherit from Class', 
+                            num_components=1, default_value=(2,), 
+                            menu_items=(['0','1','2']),
+                            menu_labels=(['Never','Always','Material Flag']))
+       
+        
+        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1, default_value=["MaterialX parameter constant collect null genericshader subnet subnetconnector suboutput subinput"])
+        class_path_pt = hou.properties.parmTemplate('vopui', 'shader_referencetype')
+        class_path_pt.setLabel('Class Arc')
+        class_path_pt.setDefaultExpressionLanguage((hou.scriptLanguage.Python,))
+        class_path_pt.setDefaultExpression(('''n = hou.pwd()
+n_hasFlag = n.isMaterialFlagSet()
+i = n.evalParm('inherit_ctrl')
+r = 'none'
+if i == 1 or (n_hasFlag and i == 2):
+    r = 'inherit'
+return r'''
+,))   
+
+        ref_type_pt = hou.properties.parmTemplate('vopui', 'shader_baseprimpath')
+        ref_type_pt.setDefaultValue(['/__class_mtl__/`$OS`'])
+        ref_type_pt.setLabel('Class Prim Path')               
 
         newParm_hidingFolder.addParmTemplate(newParam_tabMenu)
+        newParm_hidingFolder.addParmTemplate(control_parm_pt)  
+        newParm_hidingFolder.addParmTemplate(class_path_pt)    
+        newParm_hidingFolder.addParmTemplate(ref_type_pt)             
 
+        ### Parameters for texture control
         newParam_uvScale = hou.FloatParmTemplate("uvscale", "UV Scale", 2, default_value=(1,1))
         newParam_uvOffset = hou.FloatParmTemplate("uvoffset", "UV Offset", 2, default_value=(0,0))
         newParam_uvRotate = hou.FloatParmTemplate("uvrotate", "UV Rotate", 1)
@@ -307,7 +343,7 @@ def nodeCreation(renderer, goal, file_data):
         parameters.append(newParam_separator)
         parameters.append(newParam_displacement)
         
-        goalNode.setParmTemplateGroup(parameters)   
+        goalNode.setParmTemplateGroup(parameters)     
 
         ### Destroy pre-made nodes
         children = goalNode.allSubChildren()
@@ -327,7 +363,7 @@ def nodeCreation(renderer, goal, file_data):
         subnet_output_disp.parm("parmlabel").set("Displacement")
         subnet_output_disp.parm("parmtype").set("displacement")        
         
-        MTLX_StSf_Node = goalNode.createNode("mtlxstandard_surface", set_name)
+        MTLX_StSf_Node = goalNode.createNode("mtlxstandard_surface", set)
         subnet_output_surface.setNamedInput("suboutput", MTLX_StSf_Node, "out")
 
         MTLX_UV_Attrib = goalNode.createNode("usdprimvarreader", "UVAttrib")
@@ -360,40 +396,46 @@ def nodeCreation(renderer, goal, file_data):
         MTLX_StSf_Node.setNamedInput("normal", MTLX_normal, "out")               
         
         for metadata in file_data:
-            file, name, ending, textureType = metadata
-            detected_texture_types.append(textureType)
+            file_path,file_name,texture_type,texture_set,file_extension = metadata
+            detected_texture_types.append(texture_type)
             
             ### Bulk actions like creating multiple texture nodes, connecting to UV Nodes
-            MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", name)  
-            MTLX_Image_Node.parm("file").set(file)
+            MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", file_name)  
+            MTLX_Image_Node.parm("file").set(file_path)
             
             MTLX_Image_Node.setNamedInput("texcoord", MTLX_UV_Place, "out")               
             
-            ### Individual actions for each texture textureType
-            if textureType == "DIFFUSE":
+            ### Individual actions for each texture texture_type
+            if texture_type == "DIFFUSE":
                 MTLX_multiply.setNamedInput("in1", MTLX_Image_Node, "out")
-            if textureType == "AO":
+            if texture_type == "AO":
                 MTLX_multiply.setNamedInput("in2", MTLX_Image_Node, "out")
                 MTLX_Image_Node.parm("signature").set("float")
-            if textureType == "DISP":
+            if texture_type == "DISP":
                 MTLX_remap_disp.setNamedInput("in", MTLX_Image_Node, "out") 
                 MTLX_Image_Node.parm("signature").set("float")
-            if textureType == "NORMAL":
+            if texture_type == "NORMAL":
                 MTLX_normal.setNamedInput("in", MTLX_Image_Node, "out")
                 MTLX_Image_Node.parm("signature").set("vector3")
-            if textureType == "ROUGH":
+            if texture_type == "ROUGH":
                 MTLX_StSf_Node.setNamedInput("specular_roughness", MTLX_Image_Node,"out")
                 MTLX_Image_Node.parm("signature").set("float")
-            if textureType == "METALLIC":
+            if texture_type == "METALLIC":
                 MTLX_Image_Node.parm("signature").set("float")
                 MTLX_StSf_Node.setNamedInput("metalness", MTLX_Image_Node,"out")
-            if textureType == "OPACITY":
+            if texture_type == "OPACITY":
                 MTLX_StSf_Node.setNamedInput("opacity", MTLX_Image_Node,"out")  
-            if textureType == "EMISSION":
+            if texture_type == "EMISSION":
                 MTLX_Image_Node.parm("signature").set("float")
-                MTLX_StSf_Node.setNamedInput("emission", MTLX_Image_Node,"out")                                                
+                MTLX_StSf_Node.setNamedInput("emission", MTLX_Image_Node,"out")
+            if texture_type == "REFRACTION":
+                MTLX_Image_Node.parm("signature").set("float")
+                MTLX_StSf_Node.setNamedInput("transmission", MTLX_Image_Node,"out")     
+            if texture_type == "SSS":
+                MTLX_Image_Node.parm("signature").set("float")
+                MTLX_StSf_Node.setNamedInput("subsurface", MTLX_Image_Node,"out")                                                                                  
                 
-        ### Check if there are no nodes of this textureType 
+        ### Check if there are no nodes of this texture_type 
         if "DIFFUSE" not in detected_texture_types and "AO" not in detected_texture_types:
             MTLX_multiply.destroy()                            
         if "DISP" not in detected_texture_types:
@@ -402,11 +444,11 @@ def nodeCreation(renderer, goal, file_data):
         if "NORMAL" not in detected_texture_types:
             MTLX_normal.destroy()            
 
-        print(f"[SUCCESS] All MTLX nodes for texture set '{set_name}' have been created.")     
+        # print(f"[SUCCESS] All MTLX nodes for texture set '{set}' have been created.")     
         goalNode.layoutChildren()
         
     if renderer == "Mantra":        # I am aware that this implementations is pretty basic, but since Karma seems to be taking over I assume that most people will use MTLX anyway
-        MANTRA_principled = goalNode.createNode("principledshader::2.0",set_name)
+        MANTRA_principled = goalNode.createNode("principledshader::2.0",set)
         MANTRA_principled.moveToGoodPosition()
 
         MANTRA_principled.parm("basecolorr").set(1)
@@ -415,93 +457,147 @@ def nodeCreation(renderer, goal, file_data):
         
 
         for metadata in file_data:
-            file, name, ending, textureType = metadata
-            detected_texture_types.append(textureType)        
+            file_path,file_name,texture_type,texture_set,file_extension = metadata
+            detected_texture_types.append(texture_type)        
         
-            ### Individual actions for each texture textureType
-            if textureType == "DIFFUSE":
+            ### Individual actions for each texture_type
+            if texture_type == "DIFFUSE":
                 MANTRA_principled.parm("basecolor_useTexture").set(True)
-                MANTRA_principled.parm("basecolor_texture").set(file)
-            if textureType == "AO":
+                MANTRA_principled.parm("basecolor_texture").set(file_path)
+            if texture_type == "AO":
                 MANTRA_principled.parm("occlusion_useTexture").set(True)
-                MANTRA_principled.parm("occlusion_texture").set(file)
-            if textureType == "DISP":
+                MANTRA_principled.parm("occlusion_texture").set(file_path)
+            if texture_type == "DISP":
                 MANTRA_principled.parm("dispTex_enable").set(True)
-                MANTRA_principled.parm("dispTex_texture").set(file)
-            if textureType == "NORMAL":
+                MANTRA_principled.parm("dispTex_texture").set(file_path)
+            if texture_type == "NORMAL":
                 MANTRA_principled.parm("baseBumpAndNormal_enable").set(True)
-                MANTRA_principled.parm("baseNormal_texture").set(file)
-            if textureType == "ROUGH":
+                MANTRA_principled.parm("baseNormal_texture").set(file_path)
+            if texture_type == "ROUGH":
                 MANTRA_principled.parm("rough_useTexture").set(True)
-                MANTRA_principled.parm("rough_texture").set(file)
-            if textureType == "METALLIC":
+                MANTRA_principled.parm("rough_texture").set(file_path)
+            if texture_type == "METALLIC":
                 MANTRA_principled.parm("metallic_useTexture").set(True)
-                MANTRA_principled.parm("metallic_texture").set(file)  
-            if textureType == "OPACITY":
+                MANTRA_principled.parm("metallic_texture").set(file_path)  
+            if texture_type == "OPACITY":
                 MANTRA_principled.parm("opaccolor_useTexture").set(True)
-                MANTRA_principled.parm("opaccolor_texture").set(file)                
-            if textureType == "EMISSION":
+                MANTRA_principled.parm("opaccolor_texture").set(file_path)                
+            if texture_type == "EMISSION":
                 MANTRA_principled.parm("emitcolor_useTexture").set(True)
-                MANTRA_principled.parm("emitcolor_texture").set(file)                              
+                MANTRA_principled.parm("emitcolor_texture").set(file_path)      
+            if texture_type == "REFRACTION":
+                MANTRA_principled.parm("transparency_useTexture").set(True)
+                MANTRA_principled.parm("transparency_texture").set(file_path)                                             
+            if texture_type == "SSS":
+                MANTRA_principled.parm("sss_useTexture").set(True)
+                MANTRA_principled.parm("sss_texture").set(file_path)
+
+        # print(f"[SUCCESS] All Mantra nodes for texture set '{set}' have been created.")  
 
 
-        print(f"[SUCCESS] All Mantra nodes for texture set '{set_name}' have been created.")                           
-            
 
-
-
-
-#   ---EXECUTE DEFINITIONS---   
+#   ---EXECUTE DEFINITIONS---                  
 print("------------------------------------------------")         
 print("[INFO] Starting PBR Express.") 
 
-if kwargs["shiftclick"] or kwargs["ctrlclick"]:
-    check = 1
-    input_texture_sets = []
+list_stats_fileProcessed = []
+list_stats_invalidTextures = []
+list_stats_invalidExtensions = []
+list_stats_UDIMdetected = []
+list_stats_redirectedTextures = []
+list_stats_hopelessTextures = []
+list_stats_materialsCreated = []
 
-    print("[INFO] Bulk Textures setup has been initiated through the press of SHIFT / CNTRL.")
+selection = hou.ui.displayMessage("Choose your mode:", buttons=("File select","Folder select", "Cancel"), close_choice=2, title="PBR-Express", details="Please refer to the documentation: https://github.com/CrisDoesCG/PBR-Express", details_label="Need help?", details_expanded=False)
 
-    while check > 0:
-        input_files = getTextureSet()
-        check = len(input_files)
+if selection == 2:
+    print(f"[INFO] Script has been canceled.")
+    exit()
+elif selection == 0:
+    input_short = getFileInput()
+    input = [input_short]
+    mode = "File"
+    print(f"[INFO] Start tech-checking files, {len(input_short)} files to check...")
+elif selection == 1:
+    input = getFolderInput()
+    if len(input) == 0:
+        input = [input]
+    mode = "Folder"
+    print(f"[INFO] Start tech-checking files, {len(input)} directory to check...")
 
-        if check > 0:
-            input_texture_sets.append(input_files)
+goal = goalSelection()
+renderer = renderHandler(supported_renderers)
 
-    renderer = renderHandler(supported_renderers)
-    destination = goalSelection()
+for i in input:
+    data, materialNames, stats_fileProcessed, stats_invalidFiles, stats_UDIMdetected, stats_redirectedTextures, stats_hopelessTextures = techChecker(i,mode)
+    
+    invalid_textures, invalid_extensions = stats_invalidFiles
 
-    # Iterating over the texture sets and creating all of the nodes
+    list_stats_fileProcessed += stats_fileProcessed
+    list_stats_invalidTextures += stats_invalidFiles[0]
+    list_stats_invalidExtensions += stats_invalidFiles[1]
+    list_stats_UDIMdetected += stats_UDIMdetected
+    list_stats_redirectedTextures += stats_redirectedTextures
+    list_stats_hopelessTextures += stats_hopelessTextures
+    list_stats_materialsCreated += materialNames 
+
+    materialData = {}
+
+    ### Split the texture data into groups with the material name as the name of the group
+    for metadata in data:
+        file_path,file_name,texture_type,texture_set,file_extension = metadata
+        if texture_set not in materialData:
+            materialData[texture_set] = []
+        materialData[texture_set].append(metadata) 
+
+    numOfMaterials = len(materialData)
     with hou.InterruptableOperation(
-        "Creating textures...", "Executing PBR-Express...", open_interrupt_dialog=True) as operation:
-        for index, set in enumerate(input_texture_sets):
-            set_name = os.path.splitext(os.path.basename(set.split(" ; ")[0]))[0].rsplit('_', 1)[0]
-            file_data = textureFinder(set)
-            quick_data = metadataAssign(file_data)
-            nodeCreation(renderer,destination,quick_data)  
-            
-            percent = (float(index) / float(len(input_texture_sets)))
-            operation.updateLongProgress(percent)             
-     
-    print("\n[INFO] Ending script.")
-    print("------------------------------------------------")      
+        "Creating textures...", "Executing PBR-Express...", open_interrupt_dialog=True) as operation:                
+        for index, (materialName, materialFiles) in enumerate(materialData.items()):
+            nodeCreation(renderer,goal,materialFiles,materialName)  
 
-else:
-    
-    input_files = getTextureSet()
-    set_name = os.path.splitext(os.path.basename(input_files.split(" ; ")[0]))[0].rsplit('_', 1)[0]
+            percent = (float(index) / float(numOfMaterials))
+            operation.updateLongProgress(percent)                       
 
-    file_data = textureFinder(input_files)
 
-    quick_data = metadataAssign(file_data)  
+    #     # FOR DEBUGGING
+    #     print(f"\n[DEBUG] Material: {materialName}")           
+    #     for metadata in materialFiles:
+    #         file_path,file_name,texture_type,texture_set,file_extension = metadata
+    #         print(f"\n\t[DEBUG] File Path: {file_path}")
+    #         print(f"\t[DEBUG] File Name: {file_name}")
+    #         print(f"\t[DEBUG] File Extension: {file_extension}") 
+    #         print(f"\t[DEBUG] Texture Type: {texture_type}")
+    #         print(f"\t[DEBUG] Texture Set: {texture_set}\n")            
+  
 
-    destination = goalSelection()                
-    
-    # debugMetadata(quick_data)
-    
-    print("[INFO] Quick setup has been initiated.")
-    nodeCreation(renderHandler(supported_renderers),destination,quick_data)    
-    print("\n[INFO] Ending script.")
-    print("------------------------------------------------")
+
+#   ---LOGGING---
+## Printing errors
+if len(list_stats_invalidExtensions) != 0:
+    print(f"[ERROR] Those files are not supported image files and will be ignored: {list_stats_invalidExtensions}")  
+
+if len(list_stats_invalidTextures) > 0:
+    print(f"[ERROR] Some files couldn't be recognized: {list_stats_invalidTextures}")
+    print(f"[INFO] Cross-checking unrecognized textures to find potential fitting texture set...")
+
+if len(list_stats_redirectedTextures) > 0:
+    print(f"[SUCCESS] Some invalid textures could be redirected to a fitting texture set.") 
+
+if len(list_stats_hopelessTextures) > 0:
+    print(f"[ERROR] Those files couldn't be associated with any texture sets and will be ignored: {list_stats_hopelessTextures}")  
+    print(f"[INFO] Proceeding with the script.")                   
+
+
+## Printing stats
+print(f"\n\t[STATS] Total files processed: {len(list_stats_fileProcessed)}")
+print(f"\t[STATS] Total UDIMs detected: {len(list_stats_UDIMdetected)}")
+print(f"\t[STATS] Total unrecognized files: {(len(list_stats_invalidTextures)+len(list_stats_invalidExtensions))-len(list_stats_redirectedTextures)}")
+print(f"\t[STATS] Total redirected textures: {len(list_stats_redirectedTextures)}")
+print(f"\t[STATS] Total materials created: {len(list_stats_materialsCreated)}")
+
+print("\n[INFO] Ending script.")
+print("------------------------------------------------")
+
 
 
