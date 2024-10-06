@@ -17,6 +17,7 @@ import re
 ## List of supported renderers    
 supported_renderers = [
 "MaterialX",
+"MaterialX (USD export optimized)",
 "Mantra",
 ]
 
@@ -461,6 +462,179 @@ return r'''
         # print(f"[SUCCESS] All MTLX nodes for texture set '{set}' have been created.")     
         goalNode.layoutChildren()
         
+    if renderer == "MaterialX (USD export optimized)":
+        ### Create subnet with all parameters
+        goalNode = goalNode.createNode("subnet",set)
+        goalNode.moveToGoodPosition()
+        goalNode.setMaterialFlag(True)                  
+
+        parameters = goalNode.parmTemplateGroup()
+
+        ### Parameters for MTLX tab filtering and solaris compatibility
+        newParm_hidingFolder = hou.FolderParmTemplate("mtlxBuilder","MaterialX+USD Builder",folder_type=hou.folderType.Collapsible)
+        control_parm_pt = hou.IntParmTemplate('inherit_ctrl','Inherit from Class', 
+                            num_components=1, default_value=(2,), 
+                            menu_items=(['0','1','2']),
+                            menu_labels=(['Never','Always','Material Flag']))
+       
+        
+        newParam_tabMenu = hou.StringParmTemplate("tabmenumask", "Tab Menu Mask", 1, default_value=["MaterialX USD parameter constant collect null genericshader subnet subnetconnector suboutput subinput"])
+        class_path_pt = hou.properties.parmTemplate('vopui', 'shader_referencetype')
+        class_path_pt.setLabel('Class Arc')
+        class_path_pt.setDefaultExpressionLanguage((hou.scriptLanguage.Python,))
+        class_path_pt.setDefaultExpression(('''n = hou.pwd()
+n_hasFlag = n.isMaterialFlagSet()
+i = n.evalParm('inherit_ctrl')
+r = 'none'
+if i == 1 or (n_hasFlag and i == 2):
+    r = 'inherit'
+return r'''
+,))   
+
+        ref_type_pt = hou.properties.parmTemplate('vopui', 'shader_baseprimpath')
+        ref_type_pt.setDefaultValue(['/__class_mtl__/`$OS`'])
+        ref_type_pt.setLabel('Class Prim Path')               
+
+        newParm_hidingFolder.addParmTemplate(newParam_tabMenu)
+        newParm_hidingFolder.addParmTemplate(control_parm_pt)  
+        newParm_hidingFolder.addParmTemplate(class_path_pt)    
+        newParm_hidingFolder.addParmTemplate(ref_type_pt)             
+
+        ### Parameters for texture control
+        # newParam_uvScale = hou.FloatParmTemplate("uvscale", "UV Scale", 2, default_value=(1,1))
+        # newParam_uvOffset = hou.FloatParmTemplate("uvoffset", "UV Offset", 2, default_value=(0,0))
+        # newParam_uvRotate = hou.FloatParmTemplate("uvrotate", "UV Rotate", 1)
+        # newParam_separator = hou.SeparatorParmTemplate("separator")
+        # newParam_displacement = hou.FloatParmTemplate("displacement", "Displacement", 1, default_value=(0.05,0))
+
+        parameters.append(newParm_hidingFolder)
+        # parameters.append(newParam_uvScale)
+        # parameters.append(newParam_uvOffset)
+        # parameters.append(newParam_uvRotate)
+        # parameters.append(newParam_separator)
+        # parameters.append(newParam_displacement)
+        
+        goalNode.setParmTemplateGroup(parameters)     
+
+        ### Destroy pre-made nodes
+        children = goalNode.allSubChildren()
+        for c in children:
+            if c.type().name() != "suboutput":
+                c.destroy()
+            else:
+                subnet_output_surface = c               
+    
+        ### Create material, UV controls and additional nodes
+        # subnet_output_surface.parm("connectorkind").set("output")
+        # subnet_output_surface.parm("parmname").set("surface")
+        # subnet_output_surface.parm("parmlabel").set("Surface")
+        # subnet_output_surface.parm("parmtype").set("surface")
+
+        # subnet_output_disp = goalNode.createNode("subnetconnector","displacement_output")
+        # subnet_output_disp.parm("connectorkind").set("output")
+        # subnet_output_disp.parm("parmname").set("displacement")
+        # subnet_output_disp.parm("parmlabel").set("Displacement")
+        # subnet_output_disp.parm("parmtype").set("displacement")        
+        
+        MTLX_StSf_Node = goalNode.createNode("mtlxstandard_surface", set)
+        subnet_output_surface.setInput(0,MTLX_StSf_Node,0)
+
+        USD_preview_Node = goalNode.createNode("usdpreviewsurface", set)
+        subnet_output_surface.setInput(1,USD_preview_Node,0)        
+
+        # MTLX_UV_Attrib = goalNode.createNode("usdprimvarreader", "UVAttrib")
+        # MTLX_UV_Attrib.parm("signature").set("float2")
+        # MTLX_UV_Attrib.parm("varname").set("uv")
+        # MTLX_UV_Attrib.setColor(col)
+
+        USD_UV_Attrib = goalNode.createNode("usdprimvarreader", "UVAttrib")
+        USD_UV_Attrib.parm("signature").set("float2")
+        USD_UV_Attrib.parm("varname").set("st")
+        USD_UV_Attrib.setColor(col)        
+
+        # MTLX_UV_Place = goalNode.createNode("mtlxplace2d", "UVControl")
+        # MTLX_UV_Place.parm("scalex").setExpression('ch("../uvscalex")')
+        # MTLX_UV_Place.parm("scaley").setExpression('ch("../uvscaley")')
+        # MTLX_UV_Place.parm("offsetx").setExpression('ch("../uvoffsetx")')
+        # MTLX_UV_Place.parm("offsety").setExpression('ch("../uvoffsety")')
+        # MTLX_UV_Place.parm("rotate").setExpression('ch("../uvrotate")')
+        # MTLX_UV_Place.setColor(col)
+        # MTLX_UV_Place.setNamedInput("texcoord", MTLX_UV_Attrib, "result")
+
+        # MTLX_disp = goalNode.createNode("mtlxdisplacement")
+        # MTLX_disp.parm("scale").setExpression('ch("../displacement")')
+        # subnet_output_disp.setNamedInput("suboutput", MTLX_disp, "out")
+        
+        # MTLX_remap_disp = goalNode.createNode("mtlxremap")
+        # MTLX_remap_disp.parm("outlow").set("-0.5")
+        # MTLX_remap_disp.parm("outhigh").set("0.5")
+        # MTLX_disp.setNamedInput("displacement", MTLX_remap_disp, "out") 
+        
+        MTLX_multiply = goalNode.createNode("mtlxmultiply")
+        MTLX_StSf_Node.setNamedInput("base_color", MTLX_multiply, "out")
+        
+        MTLX_normal = goalNode.createNode("mtlxnormalmap")
+        MTLX_StSf_Node.setNamedInput("normal", MTLX_normal, "out")               
+        
+        for metadata in file_data:
+            file_path,file_name,texture_type,texture_set,file_extension = metadata
+            detected_texture_types.append(texture_type)
+            
+            ### Bulk actions like creating multiple texture nodes, connecting to UV Nodes
+            MTLX_Image_Node = goalNode.createNode("mtlximage", file_name)  
+            MTLX_Image_Node.parm("file").set(file_path)       
+
+            USD_Image_Node = goalNode.createNode("usduvtexture", file_name)
+            USD_Image_Node.parm("file").set(file_path)  
+
+            USD_Image_Node.setInput(1,USD_UV_Attrib,0)                
+
+            ### Individual actions for each texture texture_type
+            if texture_type == "DIFFUSE":
+                MTLX_multiply.setNamedInput("in1", MTLX_Image_Node, "out")
+                USD_preview_Node.setNamedInput("diffuseColor", USD_Image_Node, "rgb")
+            if texture_type == "AO":
+                MTLX_multiply.setNamedInput("in2", MTLX_Image_Node, "out")
+                MTLX_Image_Node.parm("signature").set("float")
+                USD_preview_Node.setNamedInput("occlusion", USD_Image_Node, "r")
+            if texture_type == "NORMAL":
+                MTLX_normal.setNamedInput("in", MTLX_Image_Node, "out")
+                MTLX_Image_Node.parm("signature").set("vector3")
+                USD_preview_Node.setNamedInput("normal", USD_Image_Node, "rgb")
+            if texture_type == "ROUGH":
+                MTLX_StSf_Node.setNamedInput("specular_roughness", MTLX_Image_Node,"out")
+                MTLX_Image_Node.parm("signature").set("float")
+                USD_preview_Node.setNamedInput("roughness", USD_Image_Node, "r")
+            if texture_type == "METALLIC":
+                MTLX_Image_Node.parm("signature").set("float")
+                MTLX_StSf_Node.setNamedInput("metalness", MTLX_Image_Node,"out")
+                USD_preview_Node.setNamedInput("metallic", USD_Image_Node, "r")
+            if texture_type == "OPACITY":
+                MTLX_StSf_Node.setNamedInput("opacity", MTLX_Image_Node,"out")  
+                USD_preview_Node.setNamedInput("opacity", USD_Image_Node, "r")
+            if texture_type == "EMISSION":
+                MTLX_Image_Node.parm("signature").set("float")
+                MTLX_StSf_Node.setNamedInput("emission", MTLX_Image_Node,"out")
+                USD_preview_Node.setNamedInput("emissiveColor", USD_Image_Node, "rgb")
+            # if texture_type == "REFRACTION":
+            #     MTLX_Image_Node.parm("signature").set("float")
+            #     MTLX_StSf_Node.setNamedInput("transmission", MTLX_Image_Node,"out")     
+            # if texture_type == "SSS":
+            #     MTLX_Image_Node.parm("signature").set("float")
+            #     MTLX_StSf_Node.setNamedInput("subsurface", MTLX_Image_Node,"out")                                                                                  
+                
+        ### Check if there are no nodes of this texture_type 
+        if "DIFFUSE" in detected_texture_types and "AO" not in detected_texture_types:
+            MTLX_multiply.destroy()                            
+        # if "DISP" not in detected_texture_types:
+        #     MTLX_disp.destroy()
+        #     MTLX_remap_disp.destroy()
+        if "NORMAL" not in detected_texture_types:
+            MTLX_normal.destroy()            
+
+        # print(f"[SUCCESS] All MTLX nodes for texture set '{set}' have been created.")     
+        goalNode.layoutChildren()
+
     if renderer == "Mantra":        # I am aware that this implementations is pretty basic, but since Karma seems to be taking over I assume that most people will use MTLX anyway
         MANTRA_principled = goalNode.createNode("principledshader::2.0",set)
         MANTRA_principled.moveToGoodPosition()
@@ -506,7 +680,6 @@ return r'''
                 MANTRA_principled.parm("sss_useTexture").set(True)
                 MANTRA_principled.parm("sss_texture").set(file_path)
 
-        # print(f"[SUCCESS] All Mantra nodes for texture set '{set}' have been created.")  
 
 
 
