@@ -1,13 +1,16 @@
+# This branch is still WIP
+
+
 # Documentation, full feature list and license can be found here: https://github.com/CrisDoesCG/PBR-Express
 
 # Created by Cristian Cornesteanu
-# Written and tested in Houdini Indie 20.0.625
+# Written and tested in Houdini Indie 20.5.332
 
-# Last update 22. May 2024
-
+# Last update 04. October 2024
 
 import hou
 import os
+import re
 
 #   ---VARIABLES---
 
@@ -34,6 +37,12 @@ supportedTextures_data = {
 ## Remove duplicates from each list
 for key, values in supportedTextures_data.items():
     supportedTextures_data[key] = list(set(values))
+
+# Sort the keywords by length to prioritize longer matches
+supportedTextures_data = {
+    key: sorted(value, key=len, reverse=True)
+    for key, value in supportedTextures_data.items()
+}    
 
 
 #   ---DEFINITIONS---
@@ -212,13 +221,14 @@ def techChecker(inputFiles,mode):
         ### Invalid symbol handling
         for symbol in invalid_symbols:
             if symbol in file_name:
-                file_name.replace(symbol,"_")
+                file_name.replace(symbol,"_")                      
 
         ### Check what texture types the file matches 
         matching = []
         for key, values in supportedTextures_data.items():
             for value in values:
-                if value in file_name.lower():
+                # if value in file_name.lower():
+                if re.search(rf"(^|_|-)({re.escape(value)})(_|-|\.|$)", file_name):                
                     texture_type = key
                     ### Take longest matching texture type and remove that from the name
                     matching.append(value)
@@ -228,16 +238,20 @@ def techChecker(inputFiles,mode):
                     ### Assign texture set
                     start_index = file_name.lower().find(value)
                     matching_substring = file_name[start_index:start_index + len(value)]
-                    texture_set = file_name.replace(matching_substring,"")
+                    texture_set = file_name.replace(matching_substring,"").replace('--', '-').replace('__', '_')
+                    if texture_set.endswith("-") or texture_set.endswith("_"):
+                        texture_set = texture_set[:-1]        
+                        file_sets_list.append(texture_set)                         
+                   
+
                     
         ### Formatting texture_set string nicely
-        if texture_type is not None:
-            texture_set.replace('--', '-').replace('__', '_')      
-            if texture_set.endswith("-") or texture_set.endswith("_"):
-                texture_set = texture_set[:-1]        
-                file_sets_list.append(texture_set)    
-        else:
-            invalid_textures.append(file_name+"."+file_extension)  
+        # if texture_type is not None:
+        #     texture_set.replace('--', '-').replace('__', '_')      
+        #     if texture_set.endswith("-") or texture_set.endswith("_"):
+        #         texture_set = texture_set[:-1]        
+        #         file_sets_list.append(texture_set)    
+
 
         ### Houdini does not like long node names, this simplifies the name of the node if the file name is over 70 characters
         if len(file_name) > 70:
@@ -560,15 +574,15 @@ for i in input:
             operation.updateLongProgress(percent)                       
 
 
-    #     # FOR DEBUGGING
-    #     print(f"\n[DEBUG] Material: {materialName}")           
-    #     for metadata in materialFiles:
-    #         file_path,file_name,texture_type,texture_set,file_extension = metadata
-    #         print(f"\n\t[DEBUG] File Path: {file_path}")
-    #         print(f"\t[DEBUG] File Name: {file_name}")
-    #         print(f"\t[DEBUG] File Extension: {file_extension}") 
-    #         print(f"\t[DEBUG] Texture Type: {texture_type}")
-    #         print(f"\t[DEBUG] Texture Set: {texture_set}\n")            
+            # FOR DEBUGGING
+            # print(f"\n[DEBUG] Material: {materialName}")           
+            # for metadata in materialFiles:
+            #     file_path,file_name,texture_type,texture_set,file_extension = metadata
+            #     print(f"\n\t[DEBUG] File Path: {file_path}")
+            #     print(f"\t[DEBUG] File Name: {file_name}")
+            #     print(f"\t[DEBUG] File Extension: {file_extension}") 
+            #     print(f"\t[DEBUG] Texture Type: {texture_type}")
+            #     print(f"\t[DEBUG] Texture Set: {texture_set}\n")            
   
 
 
