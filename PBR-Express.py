@@ -11,6 +11,7 @@
 import hou
 import os
 import re
+import time
 
 #   ---VARIABLES---
 
@@ -461,6 +462,8 @@ return r'''
 
         # print(f"[SUCCESS] All MTLX nodes for texture set '{set}' have been created.")     
         goalNode.layoutChildren()
+
+        return goalNode
         
     if renderer == "MaterialX (USD export optimized)":
         ### Create subnet with all parameters
@@ -635,6 +638,8 @@ return r'''
         # print(f"[SUCCESS] All MTLX nodes for texture set '{set}' have been created.")     
         goalNode.layoutChildren()
 
+        return goalNode
+
     if renderer == "Mantra":        # I am aware that this implementations is pretty basic, but since Karma seems to be taking over I assume that most people will use MTLX anyway
         MANTRA_principled = goalNode.createNode("principledshader::2.0",set)
         MANTRA_principled.moveToGoodPosition()
@@ -680,6 +685,7 @@ return r'''
                 MANTRA_principled.parm("sss_useTexture").set(True)
                 MANTRA_principled.parm("sss_texture").set(file_path)
 
+        return MANTRA_principled
 
 
 
@@ -687,6 +693,7 @@ return r'''
 print("------------------------------------------------")         
 print("[INFO] Starting PBR Express.") 
 
+## Create empty variables
 list_stats_fileProcessed = []
 list_stats_invalidTextures = []
 list_stats_invalidExtensions = []
@@ -715,6 +722,27 @@ elif selection == 1:
 goal = goalSelection()
 renderer = renderHandler(supported_renderers)
 
+## Create .txt log file
+houdini_tmp = os.getenv("HOUDINI_TEMP_DIR")
+houdini_file_name = os.getenv("HIPNAME")
+
+timestamp = time.strftime("%Y%m%d-%H%M%S")
+log_dir = os.path.join(houdini_tmp, houdini_file_name, "PBR-Express")
+log_path = os.path.join(log_dir, f"PBR-Express_log_{timestamp}.txt")
+
+## Ensure the directory exists
+os.makedirs(log_dir, exist_ok=True)
+
+## Write the string to the file
+with open(log_path, "w") as file:
+    file.write("\n---------------------------------------------------\n\n")
+    file.write(f"Script is creating materials based on the preset '{renderer}' at '{goal}'...\n")    
+    file.write("\n---------------------------------------------------\n\n")
+    file.write("List of created materials and their content...")
+
+
+
+## START MAIN LOOP
 for i in input:
     data, materialNames, stats_fileProcessed, stats_invalidFiles, stats_UDIMdetected, stats_redirectedTextures, stats_hopelessTextures = techChecker(i,mode)
     
@@ -741,34 +769,55 @@ for i in input:
     with hou.InterruptableOperation(
         "Creating textures...", "Executing PBR-Express...", open_interrupt_dialog=True) as operation:                
         for index, (materialName, materialFiles) in enumerate(materialData.items()):
-            nodeCreation(renderer,goal,materialFiles,materialName)  
+            createdMaterial = nodeCreation(renderer,goal,materialFiles,materialName)  
+            createdMaterial_name = createdMaterial.name()
+
+            ### Wite to log file
+            with open(log_path, "a") as file:
+                file.write(f"\n\n\n- Material: {createdMaterial_name}")
+                for metadata in materialFiles:
+                    file_path,file_name,texture_type,texture_set,file_extension = metadata
+                    file.write(f"\n\tFile Path: {file_path}\n")
+                    file.write(f"\tFile Name: {file_name}\n")
+                    file.write(f"\tFile Extension: {file_extension}\n") 
+                    file.write(f"\tTexture Type: {texture_type}\n")
+                    file.write(f"\tTexture Set: {texture_set}\n")                  
+
 
             percent = (float(index) / float(numOfMaterials))
             operation.updateLongProgress(percent)                       
-
-
-            # FOR DEBUGGING
-            # print(f"\n[DEBUG] Material: {materialName}")           
-            # for metadata in materialFiles:
-            #     file_path,file_name,texture_type,texture_set,file_extension = metadata
-            #     print(f"\n\t[DEBUG] File Path: {file_path}")
-            #     print(f"\t[DEBUG] File Name: {file_name}")
-            #     print(f"\t[DEBUG] File Extension: {file_extension}") 
-            #     print(f"\t[DEBUG] Texture Type: {texture_type}")
-            #     print(f"\t[DEBUG] Texture Set: {texture_set}\n")            
+    
   
 
 
 #   ---LOGGING---
-## Printing errors
+## Printing errors and writing them to the log file
 if len(list_stats_invalidExtensions) != 0:
+    with open(log_path, "a") as file:
+        file.write("\n\n---------------------------------------------------\n\n")
+        file.write("List of files with invalid extensions...\n\n")  
+        for entry in list_stats_invalidExtensions:
+            file.write(f"\n\t{entry}\n")         
+
     print(f"[ERROR] Those files are not supported image files and will be ignored: {list_stats_invalidExtensions}")  
 
 if len(list_stats_invalidTextures) > 0:
+    with open(log_path, "a") as file:
+        file.write("\n\n---------------------------------------------------\n\n")
+        file.write("List of invalid textures...     (couldn't find any fitting texture type)\n\n")  
+        for entry in list_stats_invalidTextures:
+            file.write(f"\n\t{entry}\n")     
+
     print(f"[ERROR] Some files couldn't be recognized: {list_stats_invalidTextures}")
     print(f"[INFO] Cross-checking unrecognized textures to find potential fitting texture set...")
 
 if len(list_stats_redirectedTextures) > 0:
+    with open(log_path, "a") as file:
+        file.write("\n\n---------------------------------------------------\n\n")
+        file.write("List of redirected textures...\n\n")  
+        for entry in list_stats_redirectedTextures:
+            file.write(f"\n\t{entry}\n")     
+
     print(f"[SUCCESS] Some invalid textures could be redirected to a fitting texture set.") 
 
 if len(list_stats_hopelessTextures) > 0:
@@ -782,6 +831,8 @@ print(f"\t[STATS] Total UDIMs detected: {len(list_stats_UDIMdetected)}")
 print(f"\t[STATS] Total unrecognized files: {(len(list_stats_invalidTextures)+len(list_stats_invalidExtensions))-len(list_stats_redirectedTextures)}")
 print(f"\t[STATS] Total redirected textures: {len(list_stats_redirectedTextures)}")
 print(f"\t[STATS] Total materials created: {len(list_stats_materialsCreated)}")
+
+print(f"\n\tLog file saved to: {log_path}")
 
 print("\n[INFO] Ending script.")
 print("------------------------------------------------")
