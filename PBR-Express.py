@@ -230,7 +230,7 @@ def techChecker(inputFiles,mode):
         for key, values in supportedTextures_data.items():
             for value in values:
                 # if value in file_name.lower():
-                if re.search(rf"(^|_|-)({re.escape(value)})(_|-|\.|$)", file_name):                
+                if re.search(rf"(^|_|-)({re.escape(value)})(_|-|\.|$)", file_name.lower()):                
                     texture_type = key
                     ### Take longest matching texture type and remove that from the name
                     matching.append(value)
