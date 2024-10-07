@@ -99,7 +99,7 @@ The tool uses the data from these _two main variables_ to match each input file 
 
 ### How to use
 1. Press the shelf tool and you will be prompted with a menu. You can now choose if you want to select your texture files normally or if you want to select one or multiple folders. This can be helpful if you have textures for multiple materials all in one directory. The script will try to match the files by name while also going through subfolders, so use caution when using on a big texture library. 
-2. Choose your preferred textures. The files need to have the texture type (`albedo`, `normal`, etc.) somewhere in the file name. If your files don't get recognized, have a look at `supportedTextures_data` and see if the naming is in the database.
+2. Choose your preferred textures. The files need to have the texture type (`albedo`, `normal`, etc.) somewhere in the file name and be sepparated by `_` or a `-`. If your files don't get recognized, have a look at `supportedTextures_data` and see if the naming is in the database.
 Additionally, you can load in UDIM textures by checking the `Show sequences as one entry` toggle on the bottom of the Houdini file explorer and choosing the files. You can have it set to `Frame Range` OR `UDIM`, but the tool will automatically convert the numbering to "&lt;UDIM&gt;". This only works when using the "File" import mode. The "Folder" importer will try to recognize UDIM sequences and import them accordingly, no need for extra user input. 
 4. Choose the preferred renderer. 
 5. Choose the material library in which the material will be created. If this dialog does not come up, that means that the script recognized your open network tab as a valid VOP network and will drop the materials there. 
