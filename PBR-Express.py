@@ -240,7 +240,7 @@ def techChecker(inputFiles,mode):
                     ### Assign texture set
                     start_index = file_name.lower().find(value)
                     matching_substring = file_name[start_index:start_index + len(value)]
-                    texture_set = file_name.replace(matching_substring,"").replace('--', '-').replace('__', '_')
+                    texture_set = file_name.replace(matching_substring,"").replace('--', '-').replace('__', '_').replace('_-_','-').replace('-_','_').replace('_-','_')
                     if texture_set.endswith("-") or texture_set.endswith("_"):
                         texture_set = texture_set[:-1]        
                         file_sets_list.append(texture_set)                         
@@ -416,7 +416,7 @@ return r'''
             detected_texture_types.append(texture_type)
             
             ### Bulk actions like creating multiple texture nodes, connecting to UV Nodes
-            MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", file_name)  
+            MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", set + "_" + texture_type)  
             MTLX_Image_Node.parm("file").set(file_path)
             
             MTLX_Image_Node.setNamedInput("texcoord", MTLX_UV_Place, "out")               
@@ -542,7 +542,7 @@ return r'''
         MTLX_StSf_Node = goalNode.createNode("mtlxstandard_surface", set)
         subnet_output_surface.setInput(0,MTLX_StSf_Node,0)
 
-        USD_preview_Node = goalNode.createNode("usdpreviewsurface", set)
+        USD_preview_Node = goalNode.createNode("usdpreviewsurface", set + "_USD")
         subnet_output_surface.setInput(1,USD_preview_Node,0)        
 
         # MTLX_UV_Attrib = goalNode.createNode("usdprimvarreader", "UVAttrib")
@@ -584,10 +584,10 @@ return r'''
             detected_texture_types.append(texture_type)
             
             ### Bulk actions like creating multiple texture nodes, connecting to UV Nodes
-            MTLX_Image_Node = goalNode.createNode("mtlximage", file_name)  
+            MTLX_Image_Node = goalNode.createNode("mtlximage", set + "_" + texture_type)  
             MTLX_Image_Node.parm("file").set(file_path)       
 
-            USD_Image_Node = goalNode.createNode("usduvtexture", file_name)
+            USD_Image_Node = goalNode.createNode("usduvtexture", set + "_USD_" + texture_type)
             USD_Image_Node.parm("file").set(file_path)  
 
             USD_Image_Node.setInput(1,USD_UV_Attrib,0)                
