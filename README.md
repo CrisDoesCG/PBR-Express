@@ -77,7 +77,7 @@ See "Tips"
 
 ## 📋 Requirements
 * Houdini license of **any** kind (Apprentice, Core, Indie, FX, ...)
-* Houdini 20.0.625 (_may_ work with older versions, but it's untested.)
+* Houdini 20+ (_may_ work with older versions, but it's untested.)
 * Python 3 comes preinstalled with Houdini (may vary for Linux/Mac; check the [official documentation](https://www.sidefx.com/docs/houdini/hom/index.html#which-python))
 
 ## 🛠️ Installation
@@ -108,15 +108,8 @@ Additionally, you can load in UDIM textures by checking the `Show sequences as o
 ### Tips
 - You can save yourself a click if you have already a valid material network open as your active node network. The script will assume that that is where you want your materials to be created and won't ask for a path. Also, if you have a material network selected, it will use that as destination for the new materials.
 - The script writes logs to the console for every major action it takes. In the case of troubleshooting, it might be worth having a look.
-- For more troubleshooting, one could uncomment the lines starting with `[DEBUG]`, which are mostly located at the end of the script to get the metadata for each file printed to the console. This would be an example print: 
+- For even more troubleshooting, one could have a look at `/$HOUDINI_TEMP_DIR/$HIPNAME/PBR-Express`, where the script saves out a basic log file every time it runs. The file logs how every file is being interpreted and can help finding faulty named textures or issues with the script. The exact path of the log file will always be printed out to the console after the script is done creating the materials.
 
-```
-   [DEBUG] File Path: D:/Nextcloud/Textures/Clay/TexturesCom_Terracotta_Plain_1K_albedo.tif
-   [DEBUG] File Name: TexturesCom_Terracotta_Plain_1K_albedo
-   [DEBUG] File Extension: tif
-   [DEBUG] Texture Type: DIFFUSE
-   [DEBUG] Texture Set: TexturesCom_Terracotta_Plain_1K
-```
 
 ## 🔮 Future Plans
 - Adding support for other render engines like Vray, Arnold, Redshift, ...

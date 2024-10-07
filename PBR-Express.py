@@ -1,12 +1,9 @@
-# This branch is still WIP
-
-
 # Documentation, full feature list and license can be found here: https://github.com/CrisDoesCG/PBR-Express
 
 # Created by Cristian Cornesteanu
 # Written and tested in Houdini Indie 20.5.332
 
-# Last update 04. October 2024
+# Last update 07. October 2024
 
 import hou
 import os
