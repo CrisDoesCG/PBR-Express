@@ -416,7 +416,7 @@ return r'''
             detected_texture_types.append(texture_type)
             
             ### Bulk actions like creating multiple texture nodes, connecting to UV Nodes
-            MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", set + "_" + texture_type)  
+            MTLX_Image_Node = goalNode.createNode("mtlxtiledimage", f"{set}_{texture_type}")  
             MTLX_Image_Node.parm("file").set(file_path)
             
             MTLX_Image_Node.setNamedInput("texcoord", MTLX_UV_Place, "out")               
@@ -584,10 +584,10 @@ return r'''
             detected_texture_types.append(texture_type)
             
             ### Bulk actions like creating multiple texture nodes, connecting to UV Nodes
-            MTLX_Image_Node = goalNode.createNode("mtlximage", set + "_" + texture_type)  
+            MTLX_Image_Node = goalNode.createNode("mtlximage", f"{set}_{texture_type}")  
             MTLX_Image_Node.parm("file").set(file_path)       
 
-            USD_Image_Node = goalNode.createNode("usduvtexture", set + "_USD_" + texture_type)
+            USD_Image_Node = goalNode.createNode("usduvtexture", f"{set}_USD_{texture_type}")
             USD_Image_Node.parm("file").set(file_path)  
 
             USD_Image_Node.setInput(1,USD_UV_Attrib,0)                
