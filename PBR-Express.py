@@ -1,12 +1,9 @@
-# This branch is still WIP
-
-
 # Documentation, full feature list and license can be found here: https://github.com/CrisDoesCG/PBR-Express
 
 # Created by Cristian Cornesteanu
 # Written and tested in Houdini Indie 20.5.332
 
-# Last update 04. October 2024
+# Last update 09. October 2024
 
 import hou
 import os
@@ -27,7 +24,7 @@ supportedTextures_data = {
     "DIFFUSE":      ['diffuse', 'diff', 'albedo', 'color', 'colour', 'basecolor', 'basecolour'],     
     "AO":           ['ambientocclusion', 'ao', 'occlusion', 'occ'],           
     "DISP":         ['disp', 'height', 'bump'],        
-    "NORMAL":       ['normal', 'opengl', 'dx', 'normaldx', 'normal-ogl', 'nor'],      
+    "NORMAL":       ['normal', 'opengl', 'dx', 'normaldx', 'normal-ogl', 'nor', 'nrmmaya'],      
     "ROUGH":        ['roughness', 'rough'],        
     "METALLIC":     ['metallic', 'metalness'],    
     "OPACITY":      ['opacity', 'alpha'],     
@@ -189,7 +186,7 @@ def techChecker(inputFiles,mode):
 
         index = read_files.index(file)
 
-        texture_type = None
+        texture_type = "Unknown"
         texture_set = None
 
         stats_fileProcessed.append(file + str(index))
@@ -243,17 +240,7 @@ def techChecker(inputFiles,mode):
                     texture_set = file_name.replace(matching_substring,"").replace('--', '-').replace('__', '_').replace('_-_','-').replace('-_','_').replace('_-','_')
                     if texture_set.endswith("-") or texture_set.endswith("_"):
                         texture_set = texture_set[:-1]        
-                        file_sets_list.append(texture_set)                         
-                   
-
-                    
-        ### Formatting texture_set string nicely
-        # if texture_type is not None:
-        #     texture_set.replace('--', '-').replace('__', '_')      
-        #     if texture_set.endswith("-") or texture_set.endswith("_"):
-        #         texture_set = texture_set[:-1]        
-        #         file_sets_list.append(texture_set)    
-
+                        file_sets_list.append(texture_set)                                              
 
         ### Houdini does not like long node names, this simplifies the name of the node if the file name is over 70 characters
         if len(file_name) > 70:
@@ -282,14 +269,14 @@ def techChecker(inputFiles,mode):
         # print(f"\t[DEBUG] Texture Type: {texture_type}")
         # print(f"\t[DEBUG] Texture Set: {texture_set}")  
 
-        if texture_type is None and texture_set is None:
+        if texture_type is "Unknown" and texture_set is None:
             for tset in file_sets_list:
                 if tset in file_name:
                     texture_set = tset
                     stats_redirectedTextures.append(file_name+"."+file_extension)
-        if texture_type is None and texture_set is None:
-
+        if texture_type is "Unknown" and texture_set is None:
             stats_hopelessTextures.append(file_name+"."+file_extension)
+
         else:    
             materialNames.append(texture_set)
             metadata = (file_path,file_name,texture_type,texture_set,file_extension)                    
