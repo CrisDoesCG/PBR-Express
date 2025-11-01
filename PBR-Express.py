@@ -12,6 +12,9 @@ import time
 
 #   ---VARIABLES---
 
+## Toggle verbosity on/off
+verbosity = 0
+
 ## List of supported renderers    
 supported_renderers = [
 "MaterialX",
@@ -58,7 +61,8 @@ def validFileTypes():
 def getFolderInput():
     userFolderInput = hou.ui.selectFile(title=("Choose the folder containing your materials."), file_type=hou.fileType.Directory, multiple_select=True)  
     if len(userFolderInput) == 0:
-        print(f"[INFO] Script has been canceled.")        
+        if verbosity == 1:
+            print(f"[INFO] Script has been canceled.")        
         exit()
     if " ; " in userFolderInput:
         userFolderInput = userFolderInput.split(" ; ")
@@ -71,7 +75,8 @@ def getFolderInput():
 def getFileInput():    
     userFileInput = hou.ui.selectFile(title=("Choose the folder containing your materials."), file_type=hou.fileType.Image, multiple_select=True, image_chooser=True)
     if len(userFileInput) == 0:
-        print(f"[INFO] Script has been canceled.")        
+        if verbosity == 1:
+            print(f"[INFO] Script has been canceled.")        
         exit()    
     if " ; " in userFileInput:
         userFileInput = userFileInput.split(" ; ")
@@ -85,18 +90,21 @@ def manualGoalSelection():
     goalPath = hou.ui.selectNode(title = "Input destination for material") 
 
     if goalPath is None:
-        print("[INFO] Script has been canceled.")
+        if verbosity == 1:
+            print("[INFO] Script has been canceled.")
         hou.ui.displayMessage("Script has been canceled.")
         exit() 
 
     goalType = hou.node(goalPath).childTypeCategory().name()
 
     if goalType != "Vop":
-        print(f"[ERROR] The selected destination is not valid for material nodes: {goalPath}") 
+        if verbosity == 1:
+            print(f"[ERROR] The selected destination is not valid for material nodes: {goalPath}") 
         hou.ui.displayMessage("The selected node destination can't be used for materials, check the console for more info.", title=("BZZ... WRONG"))
         exit()
 
-    print(f"[SUCCESS] A valid material path was manually selected: {goalPath}")
+    if verbosity == 1:
+        print(f"[SUCCESS] A valid material path was manually selected: {goalPath}")
     return goalPath   
 
 ## System for finding active pane and use that as goal for the created nodes if it is a valid vop network, else let the user input a destination for the nodes and use manualGoalSelection()
@@ -122,13 +130,16 @@ def goalSelection():
             errorCount+=1 
     
     if errorCount == 0:
-        print(f"[SUCCESS] A valid material path was automatically detected: {currentPane_parent_path}")
+        if verbosity == 1:
+            print(f"[SUCCESS] A valid material path was automatically detected: {currentPane_parent_path}")
         return currentPane_parent_path
     elif errorCount == 1: 
-        print(f"[SUCCESS] A valid material path was automatically detected: {currentPane_path}")
+        if verbosity == 1:
+            print(f"[SUCCESS] A valid material path was automatically detected: {currentPane_path}")
         return currentPane_path
     elif errorCount == 2: 
-        print("[INFO] A valid material path couldn't be detected, falling back to manual selection.")
+        if verbosity == 1:
+            print("[INFO] A valid material path couldn't be detected, falling back to manual selection.")
         return manualGoalSelection() 
 
 ## System for promting the user with a window in which the desired render engine can be selected  
@@ -142,7 +153,8 @@ def renderHandler(renderer_names):
     else:
         render_selection_name = renderer_names[render_selection[0]]
     
-    print(f"[SUCCESS] A valid renderer has been selected: {render_selection_name}")          
+    if verbosity == 1:
+        print(f"[SUCCESS] A valid renderer has been selected: {render_selection_name}")          
     return render_selection_name
 
 ## System for tech-checking the files from the getFolderInput() or getFileInput() function and creatig a metadata tuple for each file. Then combining all file tuples into a metadata_list    
@@ -269,12 +281,12 @@ def techChecker(inputFiles,mode):
         # print(f"\t[DEBUG] Texture Type: {texture_type}")
         # print(f"\t[DEBUG] Texture Set: {texture_set}")  
 
-        if texture_type is "Unknown" and texture_set is None:
+        if texture_type == "Unknown" and texture_set == None:
             for tset in file_sets_list:
                 if tset in file_name:
                     texture_set = tset
                     stats_redirectedTextures.append(file_name+"."+file_extension)
-        if texture_type is "Unknown" and texture_set is None:
+        if texture_type == "Unknown" and texture_set == None:
             stats_hopelessTextures.append(file_name+"."+file_extension)
 
         else:    
@@ -676,9 +688,10 @@ return r'''
 
 
 
-#   ---EXECUTE DEFINITIONS---                  
-print("------------------------------------------------")         
-print("[INFO] Starting PBR Express.") 
+#   ---EXECUTE DEFINITIONS---    
+if verbosity == 1:
+    print("------------------------------------------------")         
+    print("[INFO] Starting PBR Express.") 
 
 ## Create empty variables
 list_stats_fileProcessed = []
@@ -692,19 +705,22 @@ list_stats_materialsCreated = []
 selection = hou.ui.displayMessage("Choose your mode:", buttons=("File select","Folder select", "Cancel"), close_choice=2, title="PBR-Express", details="Please refer to the documentation: https://github.com/CrisDoesCG/PBR-Express", details_label="Need help?", details_expanded=False)
 
 if selection == 2:
-    print(f"[INFO] Script has been canceled.")
+    if verbosity == 1:
+        print(f"[INFO] Script has been canceled.")
     exit()
 elif selection == 0:
     input_short = getFileInput()
     input = [input_short]
     mode = "File"
-    print(f"[INFO] Start tech-checking files, {len(input_short)} files to check...")
+    if verbosity == 1:
+        print(f"[INFO] Start tech-checking files, {len(input_short)} files to check...")
 elif selection == 1:
     input = getFolderInput()
     if len(input) == 0:
         input = [input]
     mode = "Folder"
-    print(f"[INFO] Start tech-checking files, {len(input)} directory to check...")
+    if verbosity == 1:
+        print(f"[INFO] Start tech-checking files, {len(input)} directory to check...")
 
 goal = goalSelection()
 renderer = renderHandler(supported_renderers)
@@ -786,7 +802,8 @@ if len(list_stats_invalidExtensions) != 0:
         for entry in list_stats_invalidExtensions:
             file.write(f"\n\t{entry}\n")         
 
-    print(f"[ERROR] Those files are not supported image files and will be ignored: {list_stats_invalidExtensions}")  
+    if verbosity == 1:
+        print(f"[ERROR] Those files are not supported image files and will be ignored: {list_stats_invalidExtensions}")  
 
 if len(list_stats_invalidTextures) > 0:
     with open(log_path, "a") as file:
@@ -795,8 +812,9 @@ if len(list_stats_invalidTextures) > 0:
         for entry in list_stats_invalidTextures:
             file.write(f"\n\t{entry}\n")     
 
-    print(f"[ERROR] Some files couldn't be recognized: {list_stats_invalidTextures}")
-    print(f"[INFO] Cross-checking unrecognized textures to find potential fitting texture set...")
+    if verbosity == 1:
+        print(f"[ERROR] Some files couldn't be recognized: {list_stats_invalidTextures}")
+        print(f"[INFO] Cross-checking unrecognized textures to find potential fitting texture set...")
 
 if len(list_stats_redirectedTextures) > 0:
     with open(log_path, "a") as file:
@@ -805,24 +823,27 @@ if len(list_stats_redirectedTextures) > 0:
         for entry in list_stats_redirectedTextures:
             file.write(f"\n\t{entry}\n")     
 
-    print(f"[SUCCESS] Some invalid textures could be redirected to a fitting texture set.") 
+    if verbosity == 1:
+        print(f"[SUCCESS] Some invalid textures could be redirected to a fitting texture set.") 
 
 if len(list_stats_hopelessTextures) > 0:
-    print(f"[ERROR] Those files couldn't be associated with any texture sets and will be ignored: {list_stats_hopelessTextures}")  
-    print(f"[INFO] Proceeding with the script.")                   
+    if verbosity == 1:
+        print(f"[ERROR] Those files couldn't be associated with any texture sets and will be ignored: {list_stats_hopelessTextures}")  
+        print(f"[INFO] Proceeding with the script.")                   
 
 
 ## Printing stats
-print(f"\n\t[STATS] Total files processed: {len(list_stats_fileProcessed)}")
-print(f"\t[STATS] Total UDIMs detected: {len(list_stats_UDIMdetected)}")
-print(f"\t[STATS] Total unrecognized files: {(len(list_stats_invalidTextures)+len(list_stats_invalidExtensions))-len(list_stats_redirectedTextures)}")
-print(f"\t[STATS] Total redirected textures: {len(list_stats_redirectedTextures)}")
-print(f"\t[STATS] Total materials created: {len(list_stats_materialsCreated)}")
-
-print(f"\n\tLog file saved to: {log_path}")
-
-print("\n[INFO] Ending script.")
-print("------------------------------------------------")
+if verbosity == 1:
+    print(f"\n\t[STATS] Total files processed: {len(list_stats_fileProcessed)}")
+    print(f"\t[STATS] Total UDIMs detected: {len(list_stats_UDIMdetected)}")
+    print(f"\t[STATS] Total unrecognized files: {(len(list_stats_invalidTextures)+len(list_stats_invalidExtensions))-len(list_stats_redirectedTextures)}")
+    print(f"\t[STATS] Total redirected textures: {len(list_stats_redirectedTextures)}")
+    print(f"\t[STATS] Total materials created: {len(list_stats_materialsCreated)}")
+    
+    print(f"\n\tLog file saved to: {log_path}")
+    
+    print("\n[INFO] Ending script.")
+    print("------------------------------------------------")
 
 
 
